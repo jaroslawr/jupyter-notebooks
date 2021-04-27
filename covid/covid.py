@@ -28,8 +28,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
-import datetime
+from datetime import datetime, timedelta
 
 # %% [markdown]
 # ## Setup
@@ -84,52 +85,70 @@ df.head(3)
 
 # %% tags=[]
 df[(df["Country/Region"] == "United Kingdom") & 
-   (df["Date"] == datetime.datetime(2021, 1, 1))]
+   (df["Date"] == datetime(2021, 1, 1))]
 
 # %%
 df = df.groupby(["Country/Region", "Date"], as_index=False).sum()
 
 # %%
 df[(df["Country/Region"] == "United Kingdom") &
-   (df["Date"] == datetime.datetime(2021, 1, 1))]
+   (df["Date"] == datetime(2021, 1, 1))]
 
 # %% [markdown]
 # ## Convert cumulative total to daily new cases
 
 # %%
 df[(df["Country/Region"] == "Poland") & 
-   (df["Date"] >= datetime.datetime(2021, 1, 1)) & 
-   (df["Date"] <= datetime.datetime(2021, 1, 5))]
+   (df["Date"] >= datetime(2021, 1, 1)) & 
+   (df["Date"] <= datetime(2021, 1, 5))]
 
 # %%
 df[["Cases"]] = df[["Country/Region", "Cases"]].groupby("Country/Region").diff()
 
 # %%
 df[(df["Country/Region"] == "Poland") & 
-   (df["Date"] >= datetime.datetime(2021, 1, 1)) & 
-   (df["Date"] <= datetime.datetime(2021, 1, 5))]
+   (df["Date"] >= datetime(2021, 1, 1)) & 
+   (df["Date"] <= datetime(2021, 1, 5))]
+
 
 # %% [markdown]
 # ## Analyze the data
 
 # %%
-date_from = datetime.datetime(2021, 1, 1)
-date_to = datetime.datetime(2021, 4, 22)
-countries = ["Poland", "Czechia", "Germany", "Austria"]
+def to_start_of_week(date):
+    return date - timedelta(days=date.weekday())
 
 
 # %%
-def plot(countries, date_from, date_to, w, h):
-    plot_df = df[df["Country/Region"].isin(countries) & 
-                 (df["Date"] >= date_from) &
-                 (df["Date"] <= date_to)]
-    
-    fig, ax = plt.subplots()
-    fig.set_size_inches(w, h)
+date_from = to_start_of_week(datetime(2021, 1, 1))
+date_to = to_start_of_week(datetime(2021, 4, 22))
+countries = ["Poland", "Czechia", "Germany", "Austria"]
 
-    for country, group_df in plot_df.groupby("Country/Region"):
-        ax.plot(group_df["Date"], group_df["Cases"], label=country)
+# %%
+df = df.loc[df["Country/Region"].isin(countries) & 
+            (df["Date"] >= date_from) &
+            (df["Date"] <= date_to)]
 
-    fig.legend(loc="center right", bbox_to_anchor=(1.02, 0.5))
+# %%
+df.head(3)
 
-plot(countries=countries, date_from=date_from, date_to=date_to, w=16, h=6)
+# %% [markdown]
+# ### Day by day plot
+
+# %%
+sns.relplot(data=df, x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
+
+
+# %% [markdown]
+# ### Week by week plot
+
+# %%
+def week_by_week_plot(df):
+    plot_df = df.copy()
+    plot_df["Week"] = plot_df["Date"].apply(to_start_of_week)
+    plot_df = plot_df[(plot_df["Date"] >= to_start_of_week(date_from)) &
+                      (plot_df["Date"] < to_start_of_week(date_to))]
+    plot_df = plot_df.groupby(["Country/Region", "Week"]).sum().reset_index()
+    sns.relplot(data=plot_df, x="Week", y="Cases", hue="Country/Region", kind="line", marker="o", aspect=3)
+
+week_by_week_plot(df)
