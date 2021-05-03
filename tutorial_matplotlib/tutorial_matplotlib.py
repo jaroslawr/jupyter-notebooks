@@ -57,22 +57,19 @@ df = pd.read_csv("iris.data", names=("sepal_length", "sepal_width", "petal_lengt
 
 # %% tags=[]
 def hist(attr, nbins, w, h):
+    data_min = df[attr].min()
+    data_max = df[attr].max()
+    data_range = data_max - data_min
+    bin_width = data_range / (nbins + 1)
+    bins = np.linspace(data_min, data_max, nbins + 1)
+    
     fig, ax = plt.subplots()
-    
     fig.set_size_inches(w, h)
-
-    attr_min = df[attr].min()
-    attr_max = df[attr].max()
-    bins = np.linspace(attr_min, attr_max, nbins+1)
-    bin_width = (attr_max-attr_min)/(nbins+1)
-    
-    freq_max = 0.0
     
     for i, (species, species_df) in enumerate(df.groupby("class")):
-        hist, bin_edges = np.histogram(species_df[attr], bins)
+        hist, _ = np.histogram(species_df[attr], bins)
         normed_hist = hist / np.sum(hist)
-        freq_max = max(np.amax(normed_hist), freq_max)
-        ax.stairs(normed_hist, fill=True, linewidth=1, edgecolor="black", alpha=0.6)
+        ax.stairs(normed_hist, bins, fill=True, linewidth=1, edgecolor="black", alpha=0.6)
 
 hist(attr="sepal_length", nbins=20, w=10, h=5)
 
