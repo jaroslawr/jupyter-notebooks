@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.1
+#       jupytext_version: 1.11.2
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -51,7 +51,7 @@ df.head(3)
 # ## Remove unused columns
 
 # %%
-df.drop(["Lat", "Long"], axis=1, inplace=True)
+df = df.drop(["Lat", "Long"], axis=1)
 
 # %% tags=[]
 df.head(3)
@@ -98,8 +98,7 @@ df[(df["Country/Region"] == "United Kingdom") &
 # ## Index by date and country
 
 # %%
-df = df.set_index(["Date", "Country/Region"])
-df = df.sort_index()
+df = df.set_index(["Date", "Country/Region"]).sort_index()
 
 # %%
 df.head(3)
@@ -135,47 +134,53 @@ countries = sorted([
 # ### Day by day plot
 
 # %%
-def day_by_day_plot(df):
+def cases_day_by_day():
     date_range = pd.date_range(date_from, date_to)
-    plot_df = df.copy()
-    plot_df = plot_df.loc[(date_range, countries), :]
-    sns.relplot(data=plot_df, x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
 
-day_by_day_plot(df)
+    return (
+        df.copy()
+        .loc[(date_range, countries), :]
+    )
+
+sns.relplot(data=cases_day_by_day(), x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
 
 
 # %% [markdown]
 # ### Week by week plot
 
 # %%
-def week_by_week_plot(df):
-    def to_start_of_week(dt):
+def cases_week_by_week():
+    def week_start(dt):
         return dt - timedelta(days=dt.weekday())
 
-    date_range = pd.date_range(to_start_of_week(date_from), to_start_of_week(date_to), closed="left")
+    date_range = pd.date_range(week_start(date_from), week_start(date_to), closed="left")
 
-    plot_df = df.copy()
-    plot_df = plot_df.loc[(date_range, countries), :]
-    plot_df = plot_df.groupby("Country/Region").resample("1W", level=0).sum()
-    sns.relplot(data=plot_df, x="Date", y="Cases", hue="Country/Region", kind="line", marker="o", aspect=3)
+    return (
+        df.copy()
+        .loc[(date_range, countries), :]
+        .groupby("Country/Region")
+        .resample("1W", level=0)
+        .sum()
+    )
 
-week_by_week_plot(df)
+sns.relplot(data=cases_week_by_week(), x="Date", y="Cases", hue="Country/Region", kind="line", marker="o", aspect=3)
 
 
 # %% [markdown]
 # ### 7 day moving average plot
 
 # %%
-def rolling_week_by_week_plot(df):
+def cases_moving_average(days):
     plot_date_range = pd.date_range(date_from, date_to)
     # You need more days than will be presented to compute the moving average
-    moving_window_date_range = pd.date_range(date_from - timedelta(days=7), date_to)
+    moving_window_date_range = pd.date_range(date_from - timedelta(days=days), date_to)
 
-    plot_df = df.copy()
-    plot_df = plot_df.loc[(moving_window_date_range, countries), :]
-    plot_df = plot_df.groupby("Country/Region").apply(lambda df: df.rolling(7).sum())
-    plot_df = plot_df.loc[(plot_date_range, countries), :]
+    return (
+        df.copy()
+        .loc[(moving_window_date_range, countries), :]
+        .groupby("Country/Region")
+        .apply(lambda df: df.rolling(days).mean())
+        .loc[(plot_date_range, countries), :]
+    )
 
-    sns.relplot(data=plot_df, x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
-
-rolling_week_by_week_plot(df)
+sns.relplot(data=cases_moving_average(7), x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
