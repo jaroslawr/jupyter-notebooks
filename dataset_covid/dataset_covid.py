@@ -95,25 +95,18 @@ df[(df["Country/Region"] == "United Kingdom") &
    (df["Date"] == datetime(2021, 1, 1))]
 
 # %% [markdown]
-# ## Index by date and country
-
-# %%
-df = df.set_index(["Date", "Country/Region"]).sort_index()
-
-# %%
-df.head(3)
-
-# %% [markdown]
 # ## Convert cumulative total to daily new cases
 
 # %%
-df.loc[(pd.date_range(datetime(2021, 1, 1), datetime(2021, 1, 3)), ["Poland"]), :]
+df[(df["Country/Region"] == "Poland") &
+   df["Date"].isin(pd.date_range(datetime(2021, 1, 1), datetime(2021, 1, 3)))]
 
 # %%
-df = df.groupby("Country/Region").apply(lambda df: df.diff())
+df["Cases"] = df.groupby("Country/Region")["Cases"].transform("diff")
 
 # %%
-df.head(3)
+df[(df["Country/Region"] == "Poland") &
+   df["Date"].isin(pd.date_range(datetime(2021, 1, 1), datetime(2021, 1, 3)))]
 
 # %% [markdown]
 # ## Analyze the data
@@ -136,11 +129,8 @@ countries = sorted([
 # %%
 def cases_day_by_day():
     date_range = pd.date_range(date_from, date_to)
-
-    return (
-        df.copy()
-        .loc[(date_range, countries), :]
-    )
+    return df[df["Country/Region"].isin(countries) &
+              df["Date"].isin(date_range)]
 
 sns.relplot(data=cases_day_by_day(), x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
 
@@ -154,12 +144,12 @@ def cases_week_by_week():
         return dt - timedelta(days=dt.weekday())
 
     date_range = pd.date_range(week_start(date_from), week_start(date_to), closed="left")
-
     return (
         df.copy()
-        .loc[(date_range, countries), :]
+        .loc[df["Country/Region"].isin(countries) &
+             df["Date"].isin(date_range)]
         .groupby("Country/Region")
-        .resample("1W", level=0)
+        .resample("1W", on="Date")
         .sum()
     )
 
@@ -177,10 +167,11 @@ def cases_moving_average(days):
 
     return (
         df.copy()
-        .loc[(moving_window_date_range, countries), :]
+        .loc[df["Country/Region"].isin(countries) &
+             df["Date"].isin(moving_window_date_range)]
         .groupby("Country/Region")
-        .apply(lambda df: df.rolling(days).mean())
-        .loc[(plot_date_range, countries), :]
+        .rolling(days, on="Date")
+        .mean()
     )
 
 sns.relplot(data=cases_moving_average(7), x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
