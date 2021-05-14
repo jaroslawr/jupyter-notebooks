@@ -85,35 +85,37 @@ df.head(3)
 
 # %% tags=[]
 df[(df["Country/Region"] == "United Kingdom") & 
-   (df["Date"] == datetime(2021, 1, 1))]
+   (df["Date"] == pd.to_datetime("2021-01-01"))]
 
 # %%
 df = df.groupby(["Country/Region", "Date"], as_index=False).sum()
 
 # %%
 df[(df["Country/Region"] == "United Kingdom") &
-   (df["Date"] == datetime(2021, 1, 1))]
+   (df["Date"] == pd.to_datetime("2021-01-01"))]
 
 # %% [markdown]
 # ## Convert cumulative total to daily new cases
 
 # %%
 df[(df["Country/Region"] == "Poland") &
-   df["Date"].isin(pd.date_range(datetime(2021, 1, 1), datetime(2021, 1, 3)))]
+   (df["Date"] >= pd.to_datetime("2021-01-01")) &
+   (df["Date"] <= pd.to_datetime("2021-01-03"))]
 
 # %%
 df["Cases"] = df.groupby("Country/Region")["Cases"].transform("diff")
 
 # %%
 df[(df["Country/Region"] == "Poland") &
-   df["Date"].isin(pd.date_range(datetime(2021, 1, 1), datetime(2021, 1, 3)))]
+   (df["Date"] >= pd.to_datetime("2021-01-01")) &
+   (df["Date"] <= pd.to_datetime("2021-01-03"))]
 
 # %% [markdown]
 # ## Analyze the data
 
 # %%
-date_from = datetime(2021, 1, 1)
-date_to   = datetime(2021, 4, 22)
+date_from = pd.to_datetime("2021-01-01")
+date_to   = pd.to_datetime("2021-04-22")
 
 countries = sorted([
     "Poland",
@@ -128,9 +130,9 @@ countries = sorted([
 
 # %%
 def cases_day_by_day():
-    date_range = pd.date_range(date_from, date_to)
     return df[df["Country/Region"].isin(countries) &
-              df["Date"].isin(date_range)]
+              (df["Date"] >= date_from) &
+              (df["Date"] <= date_to)]
 
 sns.relplot(data=cases_day_by_day(), x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
 
@@ -143,11 +145,11 @@ def cases_week_by_week():
     def week_start(dt):
         return dt - timedelta(days=dt.weekday())
 
-    date_range = pd.date_range(week_start(date_from), week_start(date_to), closed="left")
     return (
         df.copy()
         .loc[df["Country/Region"].isin(countries) &
-             df["Date"].isin(date_range)]
+             (df["Date"] >= week_start(date_from)) &
+             (df["Date"] < week_start(date_to))]
         .groupby("Country/Region")
         .resample("1W", on="Date")
         .sum()
@@ -161,14 +163,14 @@ sns.relplot(data=cases_week_by_week(), x="Date", y="Cases", hue="Country/Region"
 
 # %%
 def cases_moving_average(days):
-    plot_date_range = pd.date_range(date_from, date_to)
-    # You need more days than will be presented to compute the moving average
-    moving_window_date_range = pd.date_range(date_from - timedelta(days=days), date_to)
+    # To compute the moving average you need more days than will be presented
+    ma_date_from = date_from - timedelta(days=days)
 
     return (
         df.copy()
         .loc[df["Country/Region"].isin(countries) &
-             df["Date"].isin(moving_window_date_range)]
+             (df["Date"] >= ma_date_from) &
+             (df["Date"] <= date_to)]
         .groupby("Country/Region")
         .rolling(days, on="Date")
         .mean()
