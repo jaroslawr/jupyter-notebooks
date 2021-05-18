@@ -22,7 +22,7 @@
 # https://github.com/CSSEGISandData/COVID-19
 
 # %% [markdown]
-# ## Imports
+# ## Setup
 
 # %%
 import numpy as np
@@ -32,14 +32,11 @@ import seaborn as sns
 
 from datetime import datetime, timedelta
 
-# %% [markdown]
-# ## Setup
-
 # %%
 plt.style.use("ggplot")
 
 # %% [markdown]
-# ## Read data
+# ## Import and clean up data
 
 # %%
 df = pd.read_csv("time_series_covid19_confirmed_global.csv")
@@ -48,7 +45,7 @@ df = pd.read_csv("time_series_covid19_confirmed_global.csv")
 df.head(3)
 
 # %% [markdown]
-# ## Remove unused columns
+# ### Remove unused columns
 
 # %%
 df = df.drop(["Lat", "Long"], axis=1)
@@ -57,7 +54,7 @@ df = df.drop(["Lat", "Long"], axis=1)
 df.head(3)
 
 # %% [markdown]
-# ## Convert from wide format to long
+# ### Convert from wide format to long
 
 # %%
 df = df.melt(id_vars=["Province/State", "Country/Region"], var_name="Date", value_name="Cases")
@@ -66,7 +63,7 @@ df = df.melt(id_vars=["Province/State", "Country/Region"], var_name="Date", valu
 df.head(3)
 
 # %% [markdown]
-# ## Make values in date column proper dates
+# ### Make values in date column proper dates
 
 # %%
 df.dtypes
@@ -81,7 +78,7 @@ df.dtypes
 df.head(3)
 
 # %% [markdown]
-# ## Sum provinces, aggregate to country level
+# ### Sum provinces, aggregate to country level
 
 # %% tags=[]
 df[(df["Country/Region"] == "United Kingdom") & 
@@ -95,7 +92,7 @@ df[(df["Country/Region"] == "United Kingdom") &
    (df["Date"] == pd.to_datetime("2021-01-01"))]
 
 # %% [markdown]
-# ## Convert cumulative total to daily new cases
+# ### Convert cumulative total to daily new cases
 
 # %%
 df[(df["Country/Region"] == "Poland") &
@@ -111,7 +108,7 @@ df[(df["Country/Region"] == "Poland") &
    (df["Date"] <= pd.to_datetime("2021-01-03"))]
 
 # %% [markdown]
-# ## Analyze the data
+# ## Analyze
 
 # %%
 date_from = pd.to_datetime("2021-01-01")
