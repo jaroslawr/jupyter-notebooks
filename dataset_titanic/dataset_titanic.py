@@ -88,7 +88,7 @@ survivors_by_class = df.groupby("pclass")["survived"].agg(
 survivors_by_class
 
 # %%
-sns.catplot(data=df, y="age_bucket", hue="survived", kind="count")
+sns.catplot(data=df, y="pclass", hue="survived", kind="count")
 
 # %%
 sns.catplot(data=df, y="pclass", x="survived", kind="point", join=False, orient="h", capsize=0.25)
