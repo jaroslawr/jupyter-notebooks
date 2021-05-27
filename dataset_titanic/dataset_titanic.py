@@ -33,6 +33,9 @@ import seaborn as sns
 # %%
 plt.style.use("ggplot")
 
+# %%
+pd.options.display.precision = 2
+
 # %% [markdown]
 # ## Read data
 
@@ -99,7 +102,7 @@ survivors_by_class_and_age = df.groupby(["pclass", "age_bucket"])["survived"].ag
     survivors=survivors, 
     total=len
 )
-survivors_by_class_and_age
+survivors_by_class_and_age.unstack(level=0)
 
 # %%
 sns.catplot(data=df, y="age_bucket", hue="survived", col="pclass", kind="count", height=4)
