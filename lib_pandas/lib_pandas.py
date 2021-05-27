@@ -20,57 +20,94 @@
 # Quick reference on getting common data processing tasks done with Pandas.
 
 # %% [markdown]
-# ## Imports
+# ## Environment setup
+
+# %% [markdown]
+# ### Import libraries
 
 # %%
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # %% [markdown]
-# ## Settings
-
-# %% [markdown]
-# ### Maximum number of DF rows and columns to show
-
-# %%
-pd.options.display.max_rows = 999
-pd.options.display.max_columns = 100
-
-# %% [markdown]
-# ### Plot style
+# ### Set theme for plots
 
 # %%
 plt.style.use("ggplot")
 
 # %% [markdown]
-# ## Basic concepts
+# ### Show more data in dataframes
+
+# %%
+pd.options.display.max_rows = 999
+pd.options.display.max_columns = 100
+pd.options.display.max_colwidth = 200
 
 # %% [markdown]
-# ## Reading data
+# ## Grouping
 
 # %% [markdown]
-# ## Inspecting data
+# Dataframe for examples that follow:
+
+# %%
+df = pd.DataFrame(
+    columns=("Cat", "Val1", "Val2"),
+    data=[
+        ["C1", 1.0, 2.0],
+        ["C1", 3.0, 4.0],
+        ["C2", 5.0, 6.0],
+        ["C2", 7.0, 8.0],
+    ]
+)
+
+# %%
+df
 
 # %% [markdown]
-# ## Cleaning data
+# ### agg: reduce group-by-group and series-by-series
 
 # %% [markdown]
-# ### Long format to wide
+# `df.groupby().agg(func)` will call `func(series)` once for each series of every group.
+#
+# `func` should return a scalar.
+
+# %%
+df.groupby("Cat").agg(np.mean)
 
 # %% [markdown]
-# ### Wide format to long
+# Multiple aggregations can be specified:
+
+# %%
+df.groupby("Cat").agg([np.mean, np.var])
 
 # %% [markdown]
-# ## Transforming data
+# Use keyword arguments to rename the resulting columns:
+
+# %%
+df.groupby("Cat").agg(val1_mean=("Val1", np.mean), val2_mean=("Val2", np.mean))
 
 # %% [markdown]
-# ## Aggregating data
+# ### apply: reduce group-by-group
 
 # %% [markdown]
-# ## Plotting data
+# `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group.
+#
+# `func` can return:
+# - a scalar - making the result of `apply()` a series
+# - a series - making the result of `apply()` a series
+# - a dataframe - making the result of `apply()` a dataframe
+
+# %%
+df.groupby("Cat").apply(lambda df: df.mean())
 
 # %% [markdown]
-# Pandas plotting methods expect data to be in the wide format, with different series in different columns.
+# ### transform: transform rows one-by-one
 
 # %% [markdown]
-# ## Exporting data
+# `df.groupby().transform(func)` will call `func(series_in_group)` once for each series in each group. In contrast to `apply()`, the result of `transform()` is of the same dimensions as the original dataframe.
+#
+# `func(series_in_group)` should either return a series of the same dimensions as `series_in_group` or a scalar, in which case pandas will take care of making a series of length `len(series_in_group)` out of it.
+
+# %%
+df.groupby("Cat").transform(lambda df: df.mean())
