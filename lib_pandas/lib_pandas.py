@@ -28,13 +28,6 @@
 # %%
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
-# %% [markdown]
-# ### Set theme for plots
-
-# %%
-plt.style.use("ggplot")
 
 # %% [markdown]
 # ### Show more data in dataframes
@@ -43,6 +36,12 @@ plt.style.use("ggplot")
 pd.options.display.max_rows = 999
 pd.options.display.max_columns = 100
 pd.options.display.max_colwidth = 200
+
+# %% [markdown]
+# ### Set floating point precision
+
+# %%
+pd.options.display.precision = 2
 
 # %% [markdown]
 # ## Grouping
