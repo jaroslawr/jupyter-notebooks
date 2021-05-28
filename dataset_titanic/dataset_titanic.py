@@ -52,15 +52,26 @@ def survivors(df):
     return len(df[df == 1])
 
 def survivors_pct(df):
+    return 0.0 if len(df) == 0
     return len(df[df == 1]) / len(df)
 
 
 # %% [markdown]
-# ### Survivors by age
+# ### Divide age into buckets
 
 # %%
-df["age_bucket"] = np.floor(df["age"] / 10.0)
+(df["age"].min(), df["age"].max())
+
+# %%
+bins = np.arange(0.0, 90.0, 10.0)
+bins
+
+# %%
+df["age_bucket"] = pd.cut(df["age"], bins=bins)
 df.head(3)
+
+# %% [markdown]
+# ### Survivors by age
 
 # %%
 survivors_by_age = df.groupby("age_bucket")["survived"].agg(
