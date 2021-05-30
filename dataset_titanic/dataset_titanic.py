@@ -43,18 +43,8 @@ pd.options.display.precision = 2
 df = pd.read_csv("titanic.txt")
 df.head(5)
 
-
 # %% [markdown]
 # ## Analysis
-
-# %%
-def survivors(df):
-    return len(df[df == 1])
-
-def survivors_pct(df):
-    return 0.0 if len(df) == 0
-    return len(df[df == 1]) / len(df)
-
 
 # %% [markdown]
 # ### Divide age into buckets
@@ -69,6 +59,30 @@ bins
 # %%
 df["age_bucket"] = pd.cut(df["age"], bins=bins)
 df.head(3)
+
+
+# %% [markdown]
+# ### Number of passengers and survivors
+
+# %%
+def survivors(df):
+    return len(df[df == 1])
+
+def survivors_pct(df):
+    if len(df) > 0:
+        return len(df[df == 1]) / len(df)
+    else:
+        return 0.0
+
+
+# %%
+len(df["survived"])
+
+# %%
+survivors(df["survived"])
+
+# %%
+survivors_pct(df["survived"])
 
 # %% [markdown]
 # ### Survivors by age
