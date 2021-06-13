@@ -87,6 +87,12 @@ df.groupby("Cat").agg([np.mean, np.var])
 df.groupby("Cat").agg(val1_mean=("Val1", np.mean), val2_mean=("Val2", np.mean))
 
 # %% [markdown]
+# The last type of agg() aggregation has slightly different syntax when dealing with a single series:
+
+# %%
+df.groupby("Cat")["Val1"].agg(val1_mean=np.mean, val1_var=np.var)
+
+# %% [markdown]
 # ### apply: reduce group-by-group
 
 # %% [markdown]
