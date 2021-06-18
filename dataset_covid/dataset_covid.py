@@ -143,9 +143,9 @@ def cases_week_by_week():
         return dt - timedelta(days=dt.weekday())
 
     return (
-        df.loc[df["Country/Region"].isin(countries) &
-               (df["Date"] >= week_start(date_from)) &
-               (df["Date"] < week_start(date_to))]
+        df[df["Country/Region"].isin(countries) &
+           (df["Date"] >= week_start(date_from)) &
+           (df["Date"] < week_start(date_to))]
         .groupby("Country/Region")
         .resample("1W", on="Date")
         .sum()
@@ -163,9 +163,9 @@ def cases_moving_average(days):
     ma_date_from = date_from - timedelta(days=days)
 
     return (
-        df.loc[df["Country/Region"].isin(countries) &
-               (df["Date"] >= ma_date_from) &
-               (df["Date"] <= date_to)]
+        df[df["Country/Region"].isin(countries) &
+           (df["Date"] >= ma_date_from) &
+           (df["Date"] <= date_to)]
         .groupby("Country/Region")
         .rolling(days, on="Date")
         .mean()
