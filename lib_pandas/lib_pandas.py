@@ -44,6 +44,75 @@ pd.options.display.max_colwidth = 200
 pd.options.display.precision = 2
 
 # %% [markdown]
+# ## Selecting
+
+# %% [markdown]
+# Dataframe for examples that follow:
+
+# %%
+df = pd.DataFrame(
+    columns=("Cat", "Val1", "Val2"),
+    data=[
+        ["C1", 1.0, 2.0],
+        ["C1", 3.0, 4.0],
+        ["C2", 5.0, 6.0],
+        ["C2", 7.0, 8.0],
+    ]
+)
+
+# %%
+df
+
+# %% [markdown]
+# ### Selecting with .[]
+
+# %% [markdown]
+# You can select rows with `.[]`:
+
+# %%
+df[df["Cat"] == "C1"]
+
+# %% [markdown]
+# You can also select columns with `.[]`:
+
+# %%
+df["Cat"]
+
+# %% [markdown]
+# You can select both rows and columns by chaining the `.[]`:
+
+# %%
+df[df["Cat"] == "C1"]["Val1"]
+
+# %% [markdown]
+# This last usage leads to pitfalls, for example when trying to modify the values in the cells selected in this way. `.loc[]` is the preferred way to select both rows and columns.
+
+# %% [markdown]
+# ### Selecting with .loc
+
+# %% [markdown]
+# However, `.[]` does not work when you want to select both rows and columns with the purpose of modifying or inserting data:
+
+# %%
+df[df["Cat"] == "C1"]["Val1"] = 5
+
+# %% [markdown]
+# `df[][]=` translates to a `df.__getitem__()` call on the data frame and then a `.__setitem__()` call on the resulting object. What is problematic is that `df.__getiem__()` might return either a view or a copy of the dataframe.
+
+# %% [markdown]
+# Instead, `.loc[]` can be used for selecting both rows and columns, in particular for modifying or inserting data:
+
+# %%
+df.loc[df["Cat"] == "C1", "Val3"] = 9
+df.loc[df["Cat"] == "C2", "Val3"] = 10
+
+# %%
+df
+
+# %% [markdown]
+# `df.loc[]` returns either a view or a copy just like `df[]`, but `df.loc[]=` is just a single method call on the `.loc` attribute of the original dataframe, free of the ambiguity of `.[][]=`, so that it will always correctly modify the dataframe.
+
+# %% [markdown]
 # ## Grouping
 
 # %% [markdown]
