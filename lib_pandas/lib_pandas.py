@@ -43,25 +43,25 @@ pd.options.display.max_colwidth = 200
 # %%
 pd.options.display.precision = 2
 
+
+# %% [markdown]
+# ## Example dataframes
+
+# %%
+def example_df():
+    return pd.DataFrame(
+        columns=("Cat", "Val1", "Val2"),
+        data=[
+            ["C1", 1.0, 2.0],
+            ["C1", 3.0, 4.0],
+            ["C2", 5.0, 6.0],
+            ["C2", 7.0, 8.0],
+        ]
+    )
+
+
 # %% [markdown]
 # ## Selecting
-
-# %% [markdown]
-# Dataframe for examples that follow:
-
-# %%
-df = pd.DataFrame(
-    columns=("Cat", "Val1", "Val2"),
-    data=[
-        ["C1", 1.0, 2.0],
-        ["C1", 3.0, 4.0],
-        ["C2", 5.0, 6.0],
-        ["C2", 7.0, 8.0],
-    ]
-)
-
-# %%
-df
 
 # %% [markdown]
 # ### Selecting with .[]
@@ -70,18 +70,21 @@ df
 # You can select rows with `.[]`:
 
 # %%
+df = example_df()
 df[df["Cat"] == "C1"]
 
 # %% [markdown]
 # You can also select columns with `.[]`:
 
 # %%
+df = example_df()
 df["Cat"]
 
 # %% [markdown]
 # You can select both rows and columns by chaining the `.[]`:
 
 # %%
+df = example_df()
 df[df["Cat"] == "C1"]["Val1"]
 
 # %% [markdown]
@@ -94,6 +97,7 @@ df[df["Cat"] == "C1"]["Val1"]
 # However, `.[]` does not work when you want to select both rows and columns with the purpose of modifying or inserting data:
 
 # %%
+df = example_df()
 df[df["Cat"] == "C1"]["Val1"] = 5
 
 # %% [markdown]
@@ -103,34 +107,33 @@ df[df["Cat"] == "C1"]["Val1"] = 5
 # Instead, `.loc[]` can be used for selecting both rows and columns, in particular for modifying or inserting data:
 
 # %%
+df = example_df()
 df.loc[df["Cat"] == "C1", "Val3"] = 9
 df.loc[df["Cat"] == "C2", "Val3"] = 10
-
-# %%
 df
 
 # %% [markdown]
 # `df.loc[]` returns either a view or a copy just like `df[]`, but `df.loc[]=` is just a single method call on the `.loc` attribute of the original dataframe, free of the ambiguity of `.[][]=`, so that it will always correctly modify the dataframe.
 
 # %% [markdown]
-# ## Grouping
+# ### Boolean masks
 
 # %% [markdown]
-# Dataframe for examples that follow:
+# You can form boolean masks with `&`, `|` and `~` (negation) and pass them to `.[]` and `.loc[]`. Conditions have to be enclosed in parenthesis since `&` and `|` have higher priority in Python than operators like `>=`:
 
 # %%
-df = pd.DataFrame(
-    columns=("Cat", "Val1", "Val2"),
-    data=[
-        ["C1", 1.0, 2.0],
-        ["C1", 3.0, 4.0],
-        ["C2", 5.0, 6.0],
-        ["C2", 7.0, 8.0],
-    ]
-)
+df = example_df()
+df[(df["Val2"] >= 4.0) & (df["Val2"] <= 6.0)]
+
+# %% [markdown]
+# Use `.isin()` series method for subset selection:
 
 # %%
-df
+df = example_df()
+df[df["Val2"].isin([4.0, 8.0])]
+
+# %% [markdown]
+# ## Grouping
 
 # %% [markdown]
 # ### agg: reduce group-by-group and series-by-series
@@ -141,24 +144,28 @@ df
 # `func` should return a scalar.
 
 # %%
+df = example_df()
 df.groupby("Cat").agg(np.mean)
 
 # %% [markdown]
 # Multiple aggregations can be specified:
 
 # %%
+df = example_df()
 df.groupby("Cat").agg([np.mean, np.var])
 
 # %% [markdown]
 # Use keyword arguments to rename the resulting columns:
 
 # %%
+df = example_df()
 df.groupby("Cat").agg(val1_mean=("Val1", np.mean), val2_mean=("Val2", np.mean))
 
 # %% [markdown]
 # The last type of agg() aggregation has slightly different syntax when dealing with a single series:
 
 # %%
+df = example_df()
 df.groupby("Cat")["Val1"].agg(val1_mean=np.mean, val1_var=np.var)
 
 # %% [markdown]
@@ -173,6 +180,7 @@ df.groupby("Cat")["Val1"].agg(val1_mean=np.mean, val1_var=np.var)
 # - a dataframe - making the result of `apply()` a dataframe
 
 # %%
+df = example_df()
 df.groupby("Cat").apply(lambda df: df.mean())
 
 # %% [markdown]
@@ -184,4 +192,5 @@ df.groupby("Cat").apply(lambda df: df.mean())
 # `func(series_in_group)` should either return a series of the same dimensions as `series_in_group` or a scalar, in which case pandas will take care of making a series of length `len(series_in_group)` out of it.
 
 # %%
+df = example_df()
 df.groupby("Cat").transform(lambda df: df.mean())
