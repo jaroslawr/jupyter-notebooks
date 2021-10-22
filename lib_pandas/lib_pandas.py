@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.2
+#       jupytext_version: 1.13.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -67,28 +67,36 @@ def example_df():
 # ### Selecting with .[]
 
 # %% [markdown]
-# You can select rows with `.[]`:
+# Select rows with `.[]`:
 
 # %%
 df = example_df()
 df[df["Cat"] == "C1"]
 
 # %% [markdown]
-# You can also select columns with `.[]`:
+# Select a single column as a `pd.Series` with `.[]`:
 
 # %%
 df = example_df()
 df["Cat"]
 
 # %% [markdown]
-# You can select both rows and columns by chaining the `.[]`:
+# Select one or more columns as a `pd.DataFrame` by passing a list to `.[]`:
+
+# %%
+df = example_df()
+df[["Cat"]]
+
+# %% [markdown]
+# Selection of rows and of columns can be combined:
 
 # %%
 df = example_df()
 df[df["Cat"] == "C1"]["Val1"]
 
-# %% [markdown]
-# This last usage leads to pitfalls, for example when trying to modify the values in the cells selected in this way. `.loc[]` is the preferred way to select both rows and columns.
+# %%
+df = example_df()
+df[df["Cat"] == "C1"][["Val1"]]
 
 # %% [markdown]
 # ### Selecting with .loc
@@ -116,7 +124,7 @@ df
 # ### Boolean masks
 
 # %% [markdown]
-# You can form boolean masks with `&`, `|` and `~` (negation) and pass them to `.[]` and `.loc[]`. Conditions have to be enclosed in parenthesis since `&` and `|` have higher priority in Python than operators like `>=`:
+# Boolean masks can be formed with `&`, `|` and `~` (negation) and passed to `.[]` and `.loc[]`. Conditions have to be enclosed in parenthesis since `&` and `|` have higher priority in Python than operators like `>=`:
 
 # %%
 df = example_df()
@@ -178,7 +186,7 @@ df.groupby("Cat")["Val1"].agg(val1_mean=np.mean, val1_var=np.var)
 
 # %%
 df = example_df()
-df.groupby("Cat").apply(lambda df: df.mean())
+df.groupby("Cat").apply(lambda df: df[["Val1", "Val2"]].mean())
 
 # %% [markdown]
 # ### transform: transform rows one-by-one
