@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.2
+#       jupytext_version: 1.13.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -18,112 +18,149 @@
 
 # %% [markdown]
 # Examples of how to create useful plots with just matplotlib and numpy.
-
-# %% [markdown]
-# ## Documentation
-
-# %% [markdown]
+#
+# Matplotlib documentation:
+#
 # https://matplotlib.org/stable/api/figure_api.html  
 # https://matplotlib.org/stable/api/axes_api.html
 
+# %% [markdown] tags=[]
+# ## Setup
+
 # %% [markdown]
-# ## Imports
+# ### Import libraries
 
 # %%
 import pandas as pd
 import numpy as np
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+import math
+
 # %% [markdown]
-# ## Configuration
+# ### Set plot style
 
 # %%
 plt.style.use("ggplot")
 
+
 # %% [markdown]
-# ## Datasets
+# ## X-Y plots
+
+# %% [markdown]
+# ### Basic X-Y plot with multiple series
 
 # %%
-df = pd.read_csv("iris.data", names=("sepal_length", "sepal_width", "petal_length", "petal_width", "class"))
+def sin_x_cos_x_plot():
+    # 16 sample points per pi and 1 one additional sample point for 0.0
+    x = np.linspace(-2*math.pi, 2*math.pi, 65)
+    sin_x = np.sin(x)
+    cos_x = np.cos(x)
 
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.set_title("sin(x) & cos(x)")
+    ax.set_xticks(x[::8]) # ticks at elements 0, 8, 16, ... of x
+    ax.plot(x, sin_x, linestyle="solid", marker="o", label="sin(x)")
+    ax.plot(x, cos_x, linestyle="solid", marker="o", label="cos(x)")
+    ax.legend(loc="best")
 
-# %% [markdown]
-# ## Plots
-
-# %% [markdown]
-# ### Histogram
-
-# %% tags=[]
-def hist(attr, nbins, w, h):
-    data_min = df[attr].min()
-    data_max = df[attr].max()
-    data_range = data_max - data_min
-    bin_width = data_range / (nbins + 1)
-    bins = np.linspace(data_min, data_max, nbins + 1)
-    
-    fig, ax = plt.subplots()
-    fig.set_size_inches(w, h)
-    
-    for i, (species, species_df) in enumerate(df.groupby("class")):
-        hist, _ = np.histogram(species_df[attr], bins)
-        normed_hist = hist / np.sum(hist)
-        ax.stairs(normed_hist, bins, fill=True, linewidth=1, edgecolor="black", alpha=0.6)
-
-hist(attr="sepal_length", nbins=20, w=10, h=5)
-
-
-# %% [markdown]
-# ### ECDF
 
 # %%
-def ecdf_plot(attr, w, h):
-    fig, ax = plt.subplots(1, 1)
-    fig.set_size_inches(w, h)
-    
-    for i, (species, species_df) in enumerate(df.groupby("class")):
-        vals = np.sort(species_df[attr])
-        quantiles = np.linspace(0, 1, len(species_df[attr]))
-        ax.plot(vals, quantiles, "o", fillstyle="none")
-
-ecdf_plot("sepal_length", 8, 4)
+sin_x_cos_x_plot()
 
 
 # %% [markdown]
-# ### Strip plot
+# ### Side-by-side X-Y plot with shared Y axis
 
 # %%
-def stripplot(ax, categories_and_observations, x_jitter=0.1, y_jitter=0.15):
-    cat_width = 1.0
-    y_ticks = []
-    y_labels = []
-    cat_count = 0
+def sin_x_cos_x_side_by_side_plot():
+    # 16 sample points per pi and 1 one additional sample point for 0.0
+    x = np.linspace(-2*math.pi, 2*math.pi, 65)
+    sin_x = np.sin(x)
+    two_cos_x = 2*np.cos(x)
 
-    for i, (category, observations) in enumerate(categories_and_observations):
-        x_vec = observations
-        x_jitter_vec = np.random.uniform(-x_jitter, x_jitter, len(observations))
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(16,4), sharey=True)
 
-        y = ((cat_width/2.0) # top margin
-             + (i * cat_width) # previous categories
-             + (cat_width/2.0)) # center of the cat area
-        y_vec = y * np.ones(len(observations))
-        y_jitter_vec = np.random.uniform(-y_jitter, y_jitter, len(observations))
+    for ax in axs:
+        ax.set_xticks(x[::8]) # ticks at elements 0, 8, 16, ... of x
 
-        ax.plot(x_vec + x_jitter_vec, y_vec + y_jitter_vec, 'o', alpha=0.5, markersize=10, linewidth=2)
+    axs[0].set_title("sin(x)")
+    axs[0].plot(x, sin_x, linestyle="solid", marker="o", label="sin(x)")
 
-        y_ticks.append(y)
-        y_labels.append(category)
-        cat_count += 1
+    axs[1].set_title("2*cos(x)")
+    axs[1].plot(x, two_cos_x, linestyle="solid", marker="o", label="sin(x)")
+    axs[1].tick_params(axis='both', labelleft=True) # show Y axis lables despite sharey=True
 
-    ax.set_ylim(0, (cat_count + 1) * cat_width)
-    ax.set_yticks(y_ticks)
-    ax.set_yticklabels(y_labels)
-    ax.grid(True, which="both", axis="x")
-    ax.grid(False, which="both", axis="y")
 
-fig, ax = plt.subplots()
-fig.set_size_inches(12, 4)
-fig.suptitle("Iris sepal length by species")
-sepal_length_by_species = ((group, values["sepal_length"]) for (group, values) in df.groupby("class"))
-stripplot(ax, sepal_length_by_species)
+# %%
+sin_x_cos_x_side_by_side_plot()
+
+
+# %% [markdown]
+# ## Histograms
+
+# %% [markdown]
+# ### Basic histogram
+
+# %%
+def histogram():
+    sample = np.random.normal(size=1000)
+    
+    fig, ax = plt.subplots(figsize=(8,4))
+    ax.hist(sample)
+
+
+# %%
+histogram()
+
+
+# %% [markdown]
+# ### Cumulative histogram for comparing distributions
+
+# %%
+def cumulative_histogram():
+    n1 = np.random.normal(loc=-1.0, size=1000)
+    n2 = np.random.normal(loc=0.0, size=1000)
+    n3 = np.random.normal(loc=1.0, size=1000)
+
+    fig, ax = plt.subplots(figsize=(16,4))
+
+    stacked = np.vstack((n1, n2, n3))
+    hist_range = (stacked.min(), stacked.max())
+    hist_bins = 100
+    hist_kwargs = dict(range=hist_range, bins=hist_bins, cumulative=True, density=True, alpha=0.75)
+
+    ax.hist(n1, **hist_kwargs, label="N(-1.0, 1.0)")
+    ax.hist(n2, **hist_kwargs, label="N(0.0, 1.0)")
+    ax.hist(n3, **hist_kwargs, label="N(1.0, 1.0)")
+
+    ax.set_xlim(hist_range)
+    ax.set_ylim(0, 1)
+
+    ax.legend(loc="best")
+
+
+# %%
+cumulative_histogram()
+
+
+# %% [markdown]
+# ## Box plots
+
+# %%
+def boxplot():
+    n1 = np.random.normal(loc=-1.0, size=1000)
+    n2 = np.random.normal(loc=0.0, size=1000)
+    n3 = np.random.normal(loc=1.0, size=1000)
+
+    stacked = np.vstack((n1, n2, n3))
+    hist_range = (stacked.min(), stacked.max())
+    hist_bins = 100
+
+    fig, ax = plt.subplots(figsize=(16,4))
+    ax.boxplot([n1, n2, n3], labels=["N(-1.0, 1.0)", "N(0.0, 1.0)", "N(1.0, 1.0)"])
+
+
+# %%
+boxplot()
