@@ -149,6 +149,22 @@ df.loc[df["Currency"] == "GBP", "USD/Currency"] = 0.5
 df
 
 # %% [markdown]
+# `loc` is also used to filter rows and columns using a multi-index. In this case, always both the row and column filter need to be passed as arguments:
+
+# %%
+df = usd_exchange_rates_df().set_index(["Currency", "Year"])
+df.head(1)
+
+# %%
+df.loc[("EUR", pd.to_datetime("2017-12-31")), :]
+
+# %% [markdown]
+# The elements of the tuple can be `slice()` objects or lists:
+
+# %%
+df.loc[(["EUR", "GBP"], slice(pd.to_datetime("2017-12-31"), pd.to_datetime("2019-12-31"))), :]
+
+# %% [markdown]
 # ### Boolean masks for [] and loc[]
 
 # %% [markdown]
