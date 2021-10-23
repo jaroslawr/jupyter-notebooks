@@ -50,6 +50,9 @@ pd.options.display.precision = 3
 # %% [markdown]
 # ### USD exchange rates (yearly averages)
 
+# %% [markdown]
+# Data from https://www.irs.gov/individuals/international-taxpayers/yearly-average-currency-exchange-rates:
+
 # %%
 def usd_exchange_rates_df():
     return pd.DataFrame(
