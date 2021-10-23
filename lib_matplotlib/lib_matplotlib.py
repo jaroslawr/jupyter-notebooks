@@ -58,12 +58,15 @@ def sin_x_cos_x_plot():
     sin_x = np.sin(x)
     cos_x = np.cos(x)
 
-    fig, ax = plt.subplots(figsize=(8, 4))
+    fig, ax = plt.subplots(figsize=(16, 5))
+
     ax.set_title("sin(x) & cos(x)")
     ax.set_xticks(x[::8]) # ticks at elements 0, 8, 16, ... of x
+
     ax.plot(x, sin_x, linestyle="solid", marker="o", label="sin(x)")
     ax.plot(x, cos_x, linestyle="solid", marker="o", label="cos(x)")
-    ax.legend(loc="best")
+
+    fig.legend(loc="center right")
 
 
 # %%
@@ -80,7 +83,7 @@ def sin_x_cos_x_side_by_side_plot():
     sin_x = np.sin(x)
     two_cos_x = 2*np.cos(x)
 
-    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(16,4), sharey=True)
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(16,5), sharey=True)
 
     for ax in axs:
         ax.set_xticks(x[::8]) # ticks at elements 0, 8, 16, ... of x
@@ -107,7 +110,7 @@ sin_x_cos_x_side_by_side_plot()
 def histogram():
     sample = np.random.normal(size=1000)
     
-    fig, ax = plt.subplots(figsize=(8,4))
+    fig, ax = plt.subplots(figsize=(8,5))
     ax.hist(sample)
 
 
@@ -124,7 +127,7 @@ def cumulative_histogram():
     n2 = np.random.normal(loc=0.0, size=1000)
     n3 = np.random.normal(loc=1.0, size=1000)
 
-    fig, ax = plt.subplots(figsize=(16,4))
+    fig, ax = plt.subplots(figsize=(16,5))
 
     stacked = np.vstack((n1, n2, n3))
     hist_range = (stacked.min(), stacked.max())
@@ -138,7 +141,7 @@ def cumulative_histogram():
     ax.set_xlim(hist_range)
     ax.set_ylim(0, 1)
 
-    ax.legend(loc="best")
+    fig.legend(loc="center right")
 
 
 # %%
@@ -158,7 +161,7 @@ def boxplot():
     hist_range = (stacked.min(), stacked.max())
     hist_bins = 100
 
-    fig, ax = plt.subplots(figsize=(16,4))
+    fig, ax = plt.subplots(figsize=(16,5))
     ax.boxplot([n1, n2, n3], labels=["N(-1.0, 1.0)", "N(0.0, 1.0)", "N(1.0, 1.0)"])
 
 
