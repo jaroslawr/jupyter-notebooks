@@ -20,17 +20,17 @@
 # Quick reference on getting common data processing tasks done with Pandas.
 
 # %% [markdown]
-# ## Environment setup
+# ## Setup
 
 # %% [markdown]
-# ### Import libraries
+# ### Importing libraries
 
 # %%
 import numpy as np
 import pandas as pd
 
 # %% [markdown]
-# ### Show more data in dataframes
+# ### Showing more data in dataframes
 
 # %%
 pd.options.display.max_rows = 999
@@ -38,7 +38,7 @@ pd.options.display.max_columns = 100
 pd.options.display.max_colwidth = 200
 
 # %% [markdown]
-# ### Set floating point precision
+# ### Setting floating point precision
 
 # %%
 pd.options.display.precision = 2
@@ -61,27 +61,27 @@ def example_df():
 
 
 # %% [markdown]
-# ## Selecting
+# ## Filtering
 
 # %% [markdown]
-# ### Selecting with .[]
+# ### Filtering with []
 
 # %% [markdown]
-# Select rows with `.[]`:
+# Select rows with `[]`:
 
 # %%
 df = example_df()
 df[df["Cat"] == "C1"]
 
 # %% [markdown]
-# Select a single column as a `pd.Series` with `.[]`:
+# Select a single column as a `pd.Series` with `[]`:
 
 # %%
 df = example_df()
 df["Cat"]
 
 # %% [markdown]
-# Select one or more columns as a `pd.DataFrame` by passing a list to `.[]`:
+# Select one or more columns as a `pd.DataFrame` by passing a list to `[]`:
 
 # %%
 df = example_df()
@@ -99,10 +99,7 @@ df = example_df()
 df[df["Cat"] == "C1"][["Val1"]]
 
 # %% [markdown]
-# ### Selecting with .loc
-
-# %% [markdown]
-# `.[]` does not work when you want to select both rows and columns with the purpose of modifying or inserting data:
+# Note that chaining `[]` does not work for the purpose of modifying or inserting data:
 
 # %%
 df = example_df()
@@ -110,9 +107,35 @@ df[df["Cat"] == "C1"]["Val1"] = 5
 
 # %% [markdown]
 # `df[][]=` translates to a `df.__getitem__()` call on the data frame and then a `.__setitem__()` call on the resulting object. The problem is that the `df.__getitem__()` call might return either a view or a copy of the dataframe, so the dataframe might or might not be modified.
+#
+# Instead, `df.loc[]` can be used to select rows and columns at the same time. `df.loc[]` will return a view or a copy just like `df[]`, but `df.loc[]=` is just a single method call on the `loc` attribute of the original dataframe, free of the ambiguity of `[][]=`, so that it will always correctly modify the dataframe.
 
 # %% [markdown]
-# Instead, `df.loc[]` can be used to select rows and columns at the same time. `df.loc[]` will return a view or a copy just like `df[]`, but `df.loc[]=` is just a single method call on the `.loc` attribute of the original dataframe, free of the ambiguity of `.[][]=`, so that it will always correctly modify the dataframe:
+# ### Filtering with loc[]
+
+# %% [markdown]
+# Select rows:
+
+# %%
+df = example_df()
+df.loc[df["Cat"] == "C1"]
+
+# %% [markdown]
+# Select a single column as a `pd.Series`:
+
+# %%
+df = example_df()
+df.loc[:, "Val1"]
+
+# %% [markdown]
+# Select one or more columns as a `pd.DataFrame`:
+
+# %%
+df = example_df()
+df.loc[:, ["Val1"]]
+
+# %% [markdown]
+# Modify a subpart of a dataframe:
 
 # %%
 df = example_df()
@@ -121,17 +144,23 @@ df.loc[df["Cat"] == "C2", "Val3"] = 10
 df
 
 # %% [markdown]
-# ### Boolean masks
+# ### Boolean masks for [] and loc[]
 
 # %% [markdown]
-# Boolean masks can be formed with `&`, `|` and `~` (negation) and passed to `.[]` and `.loc[]`. Conditions have to be enclosed in parenthesis since `&` and `|` have higher priority in Python than operators like `>=`:
+# Boolean masks can be formed with `&`, `|` and `~` (negation) and passed to `[]` and to `loc[]`. Conditions have to be enclosed in parenthesis since `&` and `|` have higher priority in Python than operators like `>=`:
 
 # %%
 df = example_df()
 df[(df["Val2"] >= 4.0) & (df["Val2"] <= 6.0)]
 
 # %% [markdown]
-# Use `.isin()` series method for subset selection:
+# The condition inside `[]` translates to a boolean vector:
+
+# %%
+(df["Val2"] >= 4.0) & (df["Val2"] <= 6.0)
+
+# %% [markdown]
+# Use `isin()` series method for subset selection:
 
 # %%
 df = example_df()
@@ -141,7 +170,7 @@ df[df["Val2"].isin([4.0, 8.0])]
 # ## Grouping
 
 # %% [markdown]
-# ### agg: reduce group-by-group and series-by-series
+# ### Reduce group-by-group and series-by-series with agg()
 
 # %% [markdown]
 # `df.groupby().agg(func)` will call `func(series)` once for each series of every group.
@@ -174,7 +203,7 @@ df = example_df()
 df.groupby("Cat")["Val1"].agg(val1_mean=np.mean, val1_var=np.var)
 
 # %% [markdown]
-# ### apply: reduce group-by-group
+# ### Reduce group-by-group with apply
 
 # %% [markdown]
 # `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group.
@@ -189,7 +218,7 @@ df = example_df()
 df.groupby("Cat").apply(lambda df: df[["Val1", "Val2"]].mean())
 
 # %% [markdown]
-# ### transform: transform rows one-by-one
+# ### Transform rows one-by-one with transform
 
 # %% [markdown]
 # `df.groupby().transform(func)` will call `func(series_in_group)` once for each series in each group. In contrast to `apply()`, the result of `transform()` is of the same dimensions as the original dataframe.
