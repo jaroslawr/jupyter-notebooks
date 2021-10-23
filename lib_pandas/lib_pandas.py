@@ -23,14 +23,14 @@
 # ## Setup
 
 # %% [markdown]
-# ### Importing libraries
+# ### Import libraries
 
 # %%
 import numpy as np
 import pandas as pd
 
 # %% [markdown]
-# ### Showing more data in dataframes
+# ### Show more data in dataframes
 
 # %%
 pd.options.display.max_rows = 999
@@ -38,7 +38,7 @@ pd.options.display.max_columns = 100
 pd.options.display.max_colwidth = 200
 
 # %% [markdown]
-# ### Setting floating point precision
+# ### Set floating point precision
 
 # %%
 pd.options.display.precision = 2
@@ -64,7 +64,7 @@ def example_df():
 # ## Filtering
 
 # %% [markdown]
-# ### Filtering with []
+# ### Filter with []
 
 # %% [markdown]
 # Select rows with `[]`:
@@ -111,7 +111,7 @@ df[df["Cat"] == "C1"]["Val1"] = 5
 # Instead, `df.loc[]` can be used to select rows and columns at the same time. `df.loc[]` will return a view or a copy just like `df[]`, but `df.loc[]=` is just a single method call on the `loc` attribute of the original dataframe, free of the ambiguity of `[][]=`, so that it will always correctly modify the dataframe.
 
 # %% [markdown]
-# ### Filtering with loc[]
+# ### Filter with loc[]
 
 # %% [markdown]
 # Select rows:
