@@ -28,7 +28,7 @@
 # ## Setup
 
 # %% [markdown]
-# ### Import libraries
+# ### Importing libraries
 
 # %%
 import pandas as pd
@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 import math
 
 # %% [markdown]
-# ### Set plot style
+# ### Seting plot style
 
 # %%
 plt.style.use("ggplot")
@@ -49,10 +49,10 @@ plt.style.use("ggplot")
 # ## X-Y plots
 
 # %% [markdown]
-# ### Basic X-Y plot with multiple series
+# ### Plot multiple series on same plot
 
 # %%
-def sin_x_cos_x_plot():
+def plot_sin_x_cos_x():
     # 16 sample points per pi and 1 one additional sample point for 0.0
     x = np.linspace(-2*math.pi, 2*math.pi, 65)
     sin_x = np.sin(x)
@@ -70,14 +70,14 @@ def sin_x_cos_x_plot():
 
 
 # %%
-sin_x_cos_x_plot()
+plot_sin_x_cos_x()
 
 
 # %% [markdown]
-# ### Side-by-side X-Y plot with shared Y axis
+# ### Plot multiple series side-by-side with shared Y axis
 
 # %%
-def sin_x_cos_x_side_by_side_plot():
+def plot_sin_x_cos_x_side_by_side():
     # 16 sample points per pi and 1 one additional sample point for 0.0
     x = np.linspace(-2*math.pi, 2*math.pi, 65)
     sin_x = np.sin(x)
@@ -97,17 +97,17 @@ def sin_x_cos_x_side_by_side_plot():
 
 
 # %%
-sin_x_cos_x_side_by_side_plot()
+plot_sin_x_cos_x_side_by_side()
 
 
 # %% [markdown]
 # ## Histograms
 
 # %% [markdown]
-# ### Basic histogram
+# ### Plot a basic histogram
 
 # %%
-def histogram():
+def plot_histogram():
     sample = np.random.normal(size=1000)
     
     fig, ax = plt.subplots(figsize=(8,5))
@@ -115,14 +115,14 @@ def histogram():
 
 
 # %%
-histogram()
+plot_histogram()
 
 
 # %% [markdown]
-# ### Cumulative histogram for comparing distributions
+# ### Plot cumulative histogram of multiple series on the same plot
 
 # %%
-def cumulative_histogram():
+def plot_cumulative_histogram():
     n1 = np.random.normal(loc=-1.0, size=1000)
     n2 = np.random.normal(loc=0.0, size=1000)
     n3 = np.random.normal(loc=1.0, size=1000)
@@ -145,14 +145,14 @@ def cumulative_histogram():
 
 
 # %%
-cumulative_histogram()
+plot_cumulative_histogram()
 
 
 # %% [markdown]
 # ## Box plots
 
 # %%
-def boxplot():
+def plot_boxplot():
     n1 = np.random.normal(loc=-1.0, size=1000)
     n2 = np.random.normal(loc=0.0, size=1000)
     n3 = np.random.normal(loc=1.0, size=1000)
@@ -166,4 +166,4 @@ def boxplot():
 
 
 # %%
-boxplot()
+plot_boxplot()
