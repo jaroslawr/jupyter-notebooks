@@ -41,21 +41,30 @@ pd.options.display.max_colwidth = 200
 # ### Set floating point precision
 
 # %%
-pd.options.display.precision = 2
+pd.options.display.precision = 3
 
 
 # %% [markdown]
-# ## Example dataframes
+# ## Datasets
+
+# %% [markdown]
+# ### USD exchange rates (yearly averages)
 
 # %%
-def example_df():
+def usd_exchange_rates_df():
     return pd.DataFrame(
-        columns=("Cat", "Val1", "Val2"),
+        columns=("Year", "Currency", "Currency/USD", "USD/Currency"),
         data=[
-            ["C1", 1.0, 2.0],
-            ["C1", 3.0, 4.0],
-            ["C2", 5.0, 6.0],
-            ["C2", 7.0, 8.0],
+            [pd.to_datetime("2016-12-31"), "EUR", 1.064, 0.940],
+            [pd.to_datetime("2017-12-31"), "EUR", 1.083, 0.923],
+            [pd.to_datetime("2018-12-31"), "EUR", 1.179, 0.848],
+            [pd.to_datetime("2019-12-31"), "EUR", 1.120, 0.893],
+            [pd.to_datetime("2020-12-31"), "EUR", 1.140, 0.877],
+            [pd.to_datetime("2016-12-31"), "GBP", 1.299, 0.770],
+            [pd.to_datetime("2017-12-31"), "GBP", 1.238, 0.808],
+            [pd.to_datetime("2018-12-31"), "GBP", 1.333, 0.750],
+            [pd.to_datetime("2019-12-31"), "GBP", 1.276, 0.784],
+            [pd.to_datetime("2020-12-31"), "GBP", 1.284, 0.779],
         ]
     )
 
@@ -70,40 +79,36 @@ def example_df():
 # Select rows with `[]`:
 
 # %%
-df = example_df()
-df[df["Cat"] == "C1"]
+df = usd_exchange_rates_df()
+df[df["Currency"] == "EUR"]
 
 # %% [markdown]
 # Select a single column as a `pd.Series` with `[]`:
 
 # %%
-df = example_df()
-df["Cat"]
+df = usd_exchange_rates_df()
+df["Currency/USD"]
 
 # %% [markdown]
 # Select one or more columns as a `pd.DataFrame` by passing a list to `[]`:
 
 # %%
-df = example_df()
-df[["Cat"]]
+df = usd_exchange_rates_df()
+df[["Currency/USD"]]
 
 # %% [markdown]
 # Selection of rows and of columns can be combined:
 
 # %%
-df = example_df()
-df[df["Cat"] == "C1"]["Val1"]
-
-# %%
-df = example_df()
-df[df["Cat"] == "C1"][["Val1"]]
+df = usd_exchange_rates_df()
+df[df["Currency"] == "EUR"]["Currency/USD"]
 
 # %% [markdown]
 # Note that chaining `[]` does not work for the purpose of modifying or inserting data:
 
 # %%
-df = example_df()
-df[df["Cat"] == "C1"]["Val1"] = 5
+df = usd_exchange_rates_df()
+df[df["Currency"] == "EUR"]["Currency/USD"] = 5
 
 # %% [markdown]
 # `df[][]=` translates to a `df.__getitem__()` call on the data frame and then a `.__setitem__()` call on the resulting object. The problem is that the `df.__getitem__()` call might return either a view or a copy of the dataframe, so the dataframe might or might not be modified.
@@ -117,30 +122,30 @@ df[df["Cat"] == "C1"]["Val1"] = 5
 # Select rows:
 
 # %%
-df = example_df()
-df.loc[df["Cat"] == "C1"]
+df = usd_exchange_rates_df()
+df.loc[df["Currency"] == "EUR"]
 
 # %% [markdown]
 # Select a single column as a `pd.Series`:
 
 # %%
-df = example_df()
-df.loc[:, "Val1"]
+df = usd_exchange_rates_df()
+df.loc[:, "Currency/USD"]
 
 # %% [markdown]
 # Select one or more columns as a `pd.DataFrame`:
 
 # %%
-df = example_df()
-df.loc[:, ["Val1"]]
+df = usd_exchange_rates_df()
+df.loc[:, ["Currency/USD"]]
 
 # %% [markdown]
 # Modify a subpart of a dataframe:
 
 # %%
-df = example_df()
-df.loc[df["Cat"] == "C1", "Val3"] = 9
-df.loc[df["Cat"] == "C2", "Val3"] = 10
+df = usd_exchange_rates_df()
+df.loc[df["Currency"] == "EUR", "Currency/USD"] = 2
+df.loc[df["Currency"] == "GBP", "USD/Currency"] = 0.5
 df
 
 # %% [markdown]
@@ -150,21 +155,27 @@ df
 # Boolean masks can be formed with `&`, `|` and `~` (negation) and passed to `[]` and to `loc[]`. Conditions have to be enclosed in parenthesis since `&` and `|` have higher priority in Python than operators like `>=`:
 
 # %%
-df = example_df()
-df[(df["Val2"] >= 4.0) & (df["Val2"] <= 6.0)]
+df = usd_exchange_rates_df()
+df[(df["Year"] >= pd.to_datetime("2018-12-31")) &
+   (df["Year"] <= pd.to_datetime("2020-12-31"))]
 
 # %% [markdown]
 # The condition inside `[]` translates to a boolean vector:
 
 # %%
-(df["Val2"] >= 4.0) & (df["Val2"] <= 6.0)
+((df["Year"] >= pd.to_datetime("2018-12-31")) &
+ (df["Year"] <= pd.to_datetime("2020-12-31")))
 
 # %% [markdown]
 # Use `isin()` series method for subset selection:
 
 # %%
-df = example_df()
-df[df["Val2"].isin([4.0, 8.0])]
+df = usd_exchange_rates_df()
+df[df["Year"].isin([
+    pd.to_datetime("2018-12-31"),
+    pd.to_datetime("2019-12-31"),
+    pd.to_datetime("2020-12-31")
+])]
 
 # %% [markdown]
 # ## Grouping
@@ -178,29 +189,32 @@ df[df["Val2"].isin([4.0, 8.0])]
 # `func` should return a scalar.
 
 # %%
-df = example_df()
-df.groupby("Cat").agg(np.mean)
+df = usd_exchange_rates_df()
+df.groupby("Currency").agg(np.mean)
 
 # %% [markdown]
 # Multiple aggregations can be specified:
 
 # %%
-df = example_df()
-df.groupby("Cat").agg([np.mean, np.var])
+df = usd_exchange_rates_df()
+df.groupby("Currency")[["Currency/USD", "USD/Currency"]].agg([np.mean, np.var])
 
 # %% [markdown]
 # Use keyword arguments to rename the resulting columns:
 
 # %%
-df = example_df()
-df.groupby("Cat").agg(val1_mean=("Val1", np.mean), val2_mean=("Val2", np.mean))
+df = usd_exchange_rates_df()
+df.groupby("Currency")[["Currency/USD", "USD/Currency"]].agg(
+    avg_cur2usd=("Currency/USD", np.mean),
+    avg_usd2cur=("USD/Currency", np.mean),
+)
 
 # %% [markdown]
 # The last type of agg() aggregation has slightly different syntax when dealing with a single series:
 
 # %%
-df = example_df()
-df.groupby("Cat")["Val1"].agg(val1_mean=np.mean, val1_var=np.var)
+df = usd_exchange_rates_df()
+df.groupby("Currency")["Currency/USD"].agg(average=np.mean)
 
 # %% [markdown]
 # ### Reduce group-by-group with apply
@@ -214,8 +228,8 @@ df.groupby("Cat")["Val1"].agg(val1_mean=np.mean, val1_var=np.var)
 # - a dataframe - making the result of `apply()` a dataframe
 
 # %%
-df = example_df()
-df.groupby("Cat").apply(lambda df: df[["Val1", "Val2"]].mean())
+df = usd_exchange_rates_df()
+df.groupby("Currency")[["Currency/USD", "USD/Currency"]].apply(lambda df: df.mean())
 
 # %% [markdown]
 # ### Transform rows one-by-one with transform
@@ -226,5 +240,5 @@ df.groupby("Cat").apply(lambda df: df[["Val1", "Val2"]].mean())
 # `func(series_in_group)` should either return a series of the same dimensions as `series_in_group` or a scalar, in which case pandas will take care of making a series of length `len(series_in_group)` out of it.
 
 # %%
-df = example_df()
-df.groupby("Cat").transform(lambda df: df.mean())
+df = usd_exchange_rates_df()
+df.groupby("Currency")[["Currency/USD", "USD/Currency"]].transform(lambda df: df.mean())
