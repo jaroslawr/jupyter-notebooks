@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.2
+#       jupytext_version: 1.13.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -54,7 +54,7 @@ df = df.drop(["Lat", "Long"], axis=1)
 df.head(3)
 
 # %% [markdown]
-# ### Convert from wide format to long
+# ### Make the date a column
 
 # %%
 df = df.melt(id_vars=["Province/State", "Country/Region"], var_name="Date", value_name="Cases")
@@ -85,27 +85,22 @@ df[(df["Country/Region"] == "United Kingdom") &
    (df["Date"] == pd.to_datetime("2021-01-01"))]
 
 # %%
-df = df.groupby(["Country/Region", "Date"], as_index=False).sum()
+df = df.groupby(["Country/Region", "Date"]).sum()
 
 # %%
-df[(df["Country/Region"] == "United Kingdom") &
-   (df["Date"] == pd.to_datetime("2021-01-01"))]
+df.loc["United Kingdom", pd.to_datetime("2021-01-01")]
 
 # %% [markdown]
 # ### Convert cumulative total to daily new cases
 
 # %%
-df[(df["Country/Region"] == "Poland") &
-   (df["Date"] >= pd.to_datetime("2021-01-01")) &
-   (df["Date"] <= pd.to_datetime("2021-01-03"))]
+df.loc[("Poland", slice(pd.to_datetime("2021-01-01"), pd.to_datetime("2021-01-03"))), :]
 
 # %%
-df["Cases"] = df.groupby("Country/Region")["Cases"].transform("diff")
+df["Cases"] = df.transform("diff")
 
 # %%
-df[(df["Country/Region"] == "Poland") &
-   (df["Date"] >= pd.to_datetime("2021-01-01")) &
-   (df["Date"] <= pd.to_datetime("2021-01-03"))]
+df.loc[("Poland", slice(pd.to_datetime("2021-01-01"), pd.to_datetime("2021-01-03"))), :]
 
 # %% [markdown]
 # ## Analyze
@@ -123,52 +118,58 @@ countries = sorted([
 
 
 # %% [markdown]
-# ### Day by day plot
+# ### Plot cases day by day
 
 # %%
-def cases_day_by_day():
-    return df[df["Country/Region"].isin(countries) &
-              (df["Date"] >= date_from) &
-              (df["Date"] <= date_to)]
+def plot_cases_day_by_day():
+    (df.loc[(countries, slice(date_from, date_to)), :]
+     .unstack(level=0)
+     .loc[:, "Cases"]
+     .plot(figsize=(16,5)))
 
-sns.relplot(data=cases_day_by_day(), x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
+
+# %%
+plot_cases_day_by_day()
 
 
 # %% [markdown]
-# ### Week by week plot
+# ### Plot cases week-by-week
 
 # %%
-def cases_week_by_week():
+def plot_cases_week_by_week():
     def week_start(dt):
         return dt - timedelta(days=dt.weekday())
 
-    return (
-        df[df["Country/Region"].isin(countries) &
-           (df["Date"] >= week_start(date_from)) &
-           (df["Date"] < week_start(date_to))]
-        .groupby("Country/Region")
-        .resample("1W", on="Date")
-        .sum()
-    )
+    (df.loc[(countries, slice(date_from, date_to)), :]
+     .groupby(level=0)
+     .resample("1W", level=1)
+     .sum()
+     .unstack(level=0)
+     .loc[:, "Cases"]
+     .plot(figsize=(16, 5)))
 
-sns.relplot(data=cases_week_by_week(), x="Date", y="Cases", hue="Country/Region", kind="line", marker="o", aspect=3)
+
+# %%
+plot_cases_week_by_week()
 
 
 # %% [markdown]
-# ### 7 day moving average plot
+# ### Plot moving average of cases
 
 # %%
-def cases_moving_average(days):
+def plot_moving_average_of_cases(days):
     # To compute the moving average you need more days than will be presented
     ma_date_from = date_from - timedelta(days=days)
 
-    return (
-        df[df["Country/Region"].isin(countries) &
-           (df["Date"] >= ma_date_from) &
-           (df["Date"] <= date_to)]
-        .groupby("Country/Region")
-        .rolling(days, on="Date")
-        .mean()
-    )
+    (df.loc[(countries, slice(ma_date_from, date_to)), :]
+     .groupby(level=0)
+     # rolling() does not support multi-indexes or level argument at the moment,
+     # the apply() call works around this
+     .apply(lambda df: df.rolling(days).sum())
+     .loc[:, "Cases"]
+     .unstack(level=0)
+     .plot(figsize=(16,5)))
 
-sns.relplot(data=cases_moving_average(7), x="Date", y="Cases", hue="Country/Region", kind="line", aspect=3)
+
+# %%
+plot_moving_average_of_cases(days=7)
