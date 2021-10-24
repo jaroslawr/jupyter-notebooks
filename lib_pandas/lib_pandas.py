@@ -73,10 +73,10 @@ def usd_exchange_rates_df():
 
 
 # %% [markdown]
-# ## Filtering
+# ## Selecting rows and columns
 
 # %% [markdown]
-# ### Filter with []
+# ### Select with []
 
 # %% [markdown]
 # Select rows with `[]`:
@@ -84,6 +84,13 @@ def usd_exchange_rates_df():
 # %%
 df = usd_exchange_rates_df()
 df[df["Currency"] == "EUR"]
+
+# %% [markdown]
+# `[]` will accept a callable as argument for cases where a reference to the dataframe is not available, for example when chaining method calls on the dataframe:
+
+# %%
+df = usd_exchange_rates_df()
+df[lambda df: df["Year"] >= pd.to_datetime("2018-12-31")][lambda df: df["Currency"] == "EUR"]
 
 # %% [markdown]
 # Select a single column as a `pd.Series` with `[]`:
@@ -119,7 +126,7 @@ df[df["Currency"] == "EUR"]["Currency/USD"] = 5
 # Instead, `df.loc[]` can be used to select rows and columns at the same time. `df.loc[]` will return a view or a copy just like `df[]`, but `df.loc[]=` is just a single method call on the `loc` attribute of the original dataframe, free of the ambiguity of `[][]=`, so that it will always correctly modify the dataframe.
 
 # %% [markdown]
-# ### Filter with loc[]
+# ### Select with loc[]
 
 # %% [markdown]
 # Select rows:
@@ -127,6 +134,14 @@ df[df["Currency"] == "EUR"]["Currency/USD"] = 5
 # %%
 df = usd_exchange_rates_df()
 df.loc[df["Currency"] == "EUR"]
+
+# %% [markdown]
+# `loc[]` will accept a callable as argument for cases where a reference to the dataframe is not available, for example when chaining method calls on the dataframe:
+
+# %%
+df = usd_exchange_rates_df()
+(df.loc[lambda df: df["Year"] >= pd.to_datetime("2018-12-31")]
+ .loc[lambda df: df["Currency"] == "EUR"])
 
 # %% [markdown]
 # Select a single column as a `pd.Series`:
@@ -152,7 +167,7 @@ df.loc[df["Currency"] == "GBP", "USD/Currency"] = 0.5
 df
 
 # %% [markdown]
-# ### Filter with loc[] and a multi-index
+# ### Select with loc[] and a multi-index
 
 # %% [markdown]
 # `loc` is also used to filter rows and columns using a multi-index. We begin by creating a dataframe with a multi-index:
@@ -161,14 +176,14 @@ df
 df = usd_exchange_rates_df().set_index(["Currency", "Year"])
 df.head(1)
 
-# %%
-When used with multiboth the row and column filter need to be passed as arguments:
+# %% [markdown]
+# When using `loc[]` with multi-index both the row and column filter need to be passed as arguments:
 
 # %%
 df.loc[("EUR", pd.to_datetime("2017-12-31")), :]
 
 # %% [markdown]
-# The elements of the tuple can be `slice()` objects or lists:
+# The elements of the tuple can be lists or `slice()` objects:
 
 # %%
 df.loc[(["EUR", "GBP"], slice(pd.to_datetime("2017-12-31"), pd.to_datetime("2019-12-31"))), :]
@@ -242,7 +257,7 @@ df = usd_exchange_rates_df()
 df.groupby("Currency")["Currency/USD"].agg(average=np.mean)
 
 # %% [markdown]
-# ### Reduce group-by-group with apply
+# ### Reduce group-by-group with apply()
 
 # %% [markdown]
 # `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group.
@@ -257,7 +272,7 @@ df = usd_exchange_rates_df()
 df.groupby("Currency")[["Currency/USD", "USD/Currency"]].apply(lambda df: df.mean())
 
 # %% [markdown]
-# ### Transform rows one-by-one with transform
+# ### Transform rows one-by-one with transform()
 
 # %% [markdown]
 # `df.groupby().transform(func)` will call `func(series_in_group)` once for each series in each group. In contrast to `apply()`, the result of `transform()` is of the same dimensions as the original dataframe.
