@@ -189,6 +189,18 @@ df.loc[("EUR", pd.to_datetime("2017-12-31")), :]
 df.loc[(["EUR", "GBP"], slice(pd.to_datetime("2017-12-31"), pd.to_datetime("2019-12-31"))), :]
 
 # %% [markdown]
+# To filter only on first N levels of the multi-index, simply omit the criteria for all remaining levels:
+
+# %%
+df.loc["EUR", :]
+
+# %% [markdown]
+# To filter only on middle or last N levels of the multi-index, use `slice(None)` to select everything at the upper levels (`slice(None)` is just the equivalent of `:`, which can not be used as an element in a tuple):
+
+# %%
+df.loc[(slice(None), pd.to_datetime("2017-12-31")), :]
+
+# %% [markdown]
 # ### Boolean masks for [] and loc[]
 
 # %% [markdown]
