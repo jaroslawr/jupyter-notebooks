@@ -170,34 +170,31 @@ df
 # ### Select with loc[] and a multi-index
 
 # %% [markdown]
-# `loc` is also used to filter rows and columns using a multi-index. We begin by creating a dataframe with a multi-index:
-
-# %%
-df = usd_exchange_rates_df().set_index(["Currency", "Year"])
-df.head(1)
-
-# %% [markdown]
 # When using `loc[]` with multi-index both the row and column filter need to be passed as arguments:
 
 # %%
+df = usd_exchange_rates_df().set_index(["Currency", "Year"])
 df.loc[("EUR", pd.to_datetime("2017-12-31")), :]
 
 # %% [markdown]
 # The elements of the tuple can be lists or `slice()` objects:
 
 # %%
+df = usd_exchange_rates_df().set_index(["Currency", "Year"])
 df.loc[(["EUR", "GBP"], slice(pd.to_datetime("2017-12-31"), pd.to_datetime("2019-12-31"))), :]
 
 # %% [markdown]
 # To filter only on first N levels of the multi-index, simply omit the criteria for all remaining levels:
 
 # %%
+df = usd_exchange_rates_df().set_index(["Currency", "Year"])
 df.loc["EUR", :]
 
 # %% [markdown]
 # To filter only on middle or last N levels of the multi-index, use `slice(None)` to select everything at the upper levels (`slice(None)` is just the equivalent of `:`, which can not be used as an element in a tuple):
 
 # %%
+df = usd_exchange_rates_df().set_index(["Currency", "Year"])
 df.loc[(slice(None), pd.to_datetime("2017-12-31")), :]
 
 # %% [markdown]
