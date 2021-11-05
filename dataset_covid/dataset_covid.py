@@ -78,6 +78,18 @@ df.dtypes
 df.head(3)
 
 # %% [markdown]
+# ## Keep only data starting from 2021
+
+# %%
+df.head(5)
+
+# %%
+df = df[df["Date"] >= pd.to_datetime("2021-01-01")]
+
+# %%
+df.head(5)
+
+# %% [markdown]
 # ### Sum provinces, aggregate to country level
 
 # %% tags=[]
@@ -94,13 +106,13 @@ df.loc["United Kingdom", pd.to_datetime("2021-01-01")]
 # ### Convert cumulative total to daily new cases
 
 # %%
-df.loc[("Poland", slice(pd.to_datetime("2021-01-01"), pd.to_datetime("2021-01-03"))), :]
+df.loc["Poland", :].iloc[0:5]
 
 # %%
-df["Cases"] = df.transform("diff")
+df = df.groupby(level=0).diff()
 
 # %%
-df.loc[("Poland", slice(pd.to_datetime("2021-01-01"), pd.to_datetime("2021-01-03"))), :]
+df.loc["Poland", :].iloc[0:5]
 
 # %% [markdown]
 # ## Analyze
