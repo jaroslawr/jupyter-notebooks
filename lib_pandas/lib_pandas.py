@@ -292,3 +292,34 @@ df.groupby("Currency")[["Currency/USD", "USD/Currency"]].apply(lambda df: df.mea
 # %%
 df = usd_exchange_rates_df()
 df.groupby("Currency")[["Currency/USD", "USD/Currency"]].transform(lambda df: df.mean())
+
+# %% [markdown]
+# ## Pivoting and unpivoting
+
+# %% [markdown]
+# ### Pivot with multi-index and unstack()
+
+# %%
+df = usd_exchange_rates_df().set_index(["Currency", "Year"])
+df.unstack(level=0)
+
+# %% [markdown]
+# ### Unpivot with multi-index and stack()
+
+# %%
+df = usd_exchange_rates_df().set_index(["Currency", "Year"])
+df.stack().rename_axis(index={None: "Direction"})
+
+# %% [markdown]
+# ### Pivot with pivot()
+
+# %%
+df = usd_exchange_rates_df()
+df.pivot(index=["Year"], columns=["Currency"], values=["Currency/USD", "USD/Currency"])
+
+# %% [markdown]
+# ### Unpivot with melt()
+
+# %%
+df = usd_exchange_rates_df()
+df.melt(id_vars=["Year", "Currency"], var_name="Direction", value_name="Value")
