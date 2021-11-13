@@ -212,6 +212,7 @@ df[(df["Year"] >= pd.to_datetime("2018-12-31")) &
 # The condition inside `[]` translates to a boolean vector:
 
 # %%
+df = usd_exchange_rates_df()
 ((df["Year"] >= pd.to_datetime("2018-12-31")) &
  (df["Year"] <= pd.to_datetime("2020-12-31")))
 
