@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.0
+#       jupytext_version: 1.13.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -295,6 +295,13 @@ df.groupby("Currency")[["Currency/USD", "USD/Currency"]].transform(lambda df: df
 
 # %% [markdown]
 # ## Pivoting and unpivoting
+
+# %% [markdown]
+# The USD exchange rates dataframe is neither in fully long format nor in fully wide format: there is one row per each year+currency pair, but there are two different "observations" stored in two columns: "Currency/USD" and "USD/Currency".
+#
+# Thus the dataframe can be both:
+# - pivoted (widened) so that each currency becomes a separate column
+# - unpivoted (lengthened) so that each row is split into two and there is a "Direction" column equal to either "Currency/USD" or "USD/Currency" and a value column with the actual rate
 
 # %% [markdown]
 # ### Pivot with multi-index and unstack()
