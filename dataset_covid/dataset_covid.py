@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.0
+#       jupytext_version: 1.13.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -28,7 +28,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 from datetime import datetime, timedelta
 
@@ -37,6 +36,9 @@ plt.style.use("ggplot")
 
 # %% [markdown]
 # ## Import and clean up data
+
+# %% [markdown]
+# ### Read the CSV
 
 # %%
 df = pd.read_csv("time_series_covid19_confirmed_global.csv")
@@ -66,9 +68,6 @@ df.head(3)
 # ### Make values in date column proper dates
 
 # %%
-df.dtypes
-
-# %%
 df["Date"] = pd.to_datetime(df["Date"])
 
 # %%
@@ -77,42 +76,44 @@ df.dtypes
 # %%
 df.head(3)
 
-# %% [markdown]
-# ## Keep only data starting from 2021
-
-# %%
-df.head(5)
-
-# %%
-df = df[df["Date"] >= pd.to_datetime("2021-01-01")]
-
-# %%
-df.head(5)
-
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Sum provinces, aggregate to country level
 
 # %% tags=[]
-df[(df["Country/Region"] == "United Kingdom") & 
-   (df["Date"] == pd.to_datetime("2021-01-01"))]
+df[(df["Country/Region"] == "United Kingdom") & (df["Date"] == df["Date"].max())]
 
 # %%
 df = df.groupby(["Country/Region", "Date"]).sum()
 
-# %%
-df.loc["United Kingdom", pd.to_datetime("2021-01-01")]
-
 # %% [markdown]
+# Dataframe is now indexed by country and date and selection can be done via `loc[]`:
+
+# %%
+df.loc["United Kingdom"].iloc[-1]
+
+# %% [markdown] tags=[]
 # ### Convert cumulative total to daily new cases
 
 # %%
-df.loc["Poland", :].iloc[0:5]
+df.loc["United Kingdom"].iloc[-5:]
 
 # %%
 df = df.groupby(level=0).diff()
 
 # %%
-df.loc["Poland", :].iloc[0:5]
+df.loc["United Kingdom"].iloc[-5:]
+
+# %% [markdown] tags=[]
+# ### Keep only data starting from 2020-06
+
+# %%
+df.head(3)
+
+# %%
+df = df.loc[(slice(None), slice(pd.to_datetime("2020-06-01"), None)), :]
+
+# %% tags=[]
+df.head(3)
 
 # %% [markdown]
 # ## Analyze
@@ -129,59 +130,55 @@ countries = sorted([
 ])
 
 
+# %%
+def plot(df):
+    fig, ax = plt.subplots(figsize=(16,5))
+    df.unstack(level="Country/Region").plot(ax=ax, legend=False)
+    fig.legend(loc="center right")
+
+
 # %% [markdown]
 # ### Plot cases day by day
 
 # %%
-def plot_cases_day_by_day():
-    (df.loc[(countries, slice(date_from, date_to)), :]
-     .unstack(level=0)
-     .loc[:, "Cases"]
-     .plot(figsize=(16,5)))
-
+cases_day_by_day_df = df.loc[(countries, slice(date_from, date_to)), "Cases"]
+cases_day_by_day_df.groupby(level="Country/Region").head()
 
 # %%
-plot_cases_day_by_day()
+plot(cases_day_by_day_df)
 
 
 # %% [markdown]
 # ### Plot cases week-by-week
 
 # %%
-def plot_cases_week_by_week():
-    def week_start(dt):
-        return dt - timedelta(days=dt.weekday())
-
-    (df.loc[(countries, slice(date_from, date_to)), :]
-     .groupby(level=0)
-     .resample("1W", level=1)
-     .sum()
-     .unstack(level=0)
-     .loc[:, "Cases"]
-     .plot(figsize=(16, 5)))
+def week_start(dt):
+    return dt - timedelta(days=dt.weekday())
 
 
 # %%
-plot_cases_week_by_week()
+cases_week_by_week_df = (
+    df.loc[(countries, slice(week_start(date_from), date_to)), "Cases"]
+    .groupby(level="Country/Region")
+    .resample("1W", level="Date")
+    .sum()
+)
+cases_week_by_week_df.groupby(level="Country/Region").head()
 
+# %%
+plot(cases_week_by_week_df)
 
 # %% [markdown]
 # ### Plot moving average of cases
 
 # %%
-def plot_moving_average_of_cases(days):
-    # To compute the moving average you need more days than will be presented
-    ma_date_from = date_from - timedelta(days=days)
-
-    (df.loc[(countries, slice(ma_date_from, date_to)), :]
-     .groupby(level=0)
-     # rolling() does not support multi-indexes or level argument at the moment,
-     # the apply() call works around this
-     .apply(lambda df: df.rolling(days).sum())
-     .loc[:, "Cases"]
-     .unstack(level=0)
-     .plot(figsize=(16,5)))
-
+cases_moving_average_df = (
+    df.loc[(countries, slice(date_from - timedelta(days=7), date_to)), "Cases"]
+    .groupby(level="Country/Region")
+    .apply(lambda df: df.rolling(7).sum())
+    .loc[(countries, slice(date_from, date_to))]
+)
+cases_moving_average_df.groupby(level="Country/Region").head(10)
 
 # %%
-plot_moving_average_of_cases(days=7)
+plot(cases_moving_average_df)
