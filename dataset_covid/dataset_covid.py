@@ -177,3 +177,39 @@ cases_moving_average.groupby(level="Country/Region").head(10)
 
 # %%
 plot(cases_moving_average.unstack(level="Country/Region"))
+
+
+# %% [markdown]
+# ### Compare 2020 and 2021
+
+# %%
+def moving_average_year_to_year(df, window_days, years):
+    return pd.concat(
+        moving_average(df.loc[countries], window_days, pd.to_datetime(f"{year}-04-01"), pd.to_datetime(f"{year}-11-15"))
+        .reset_index()
+        .assign(**{"Year": year, "Day": lambda df: df["Date"].dt.strftime("%m-%d")})
+        .drop(columns=["Date"])
+        for year in years
+    ).set_index(["Country/Region", "Year", "Day"]).sort_index()
+
+
+# %%
+cases_year_to_year = moving_average_year_to_year(df.loc[countries], window_days=7, years=[2020, 2021])
+cases_year_to_year.groupby(["Country/Region", "Year"]).head(5)
+
+
+# %%
+def plot_cases_year_to_year(df):
+    countries, years, days = df.index.levels
+    fig, axs = plt.subplots(nrows=len(countries), ncols=1, figsize=(16, 24))
+    for ax, country in zip(axs, countries):
+        for year in years:
+            cases = df.loc[(country, year), "Cases"]
+            ax.plot(cases.index, cases.values, label=year)
+        ax.set_title(country)
+        ax.set_xticks([day for day in days if day.endswith("-01")])
+        ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
+
+
+# %%
+plot_cases_year_to_year(cases_year_to_year)
