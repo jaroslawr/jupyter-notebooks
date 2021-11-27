@@ -34,74 +34,46 @@ from datetime import datetime, timedelta
 # %%
 plt.style.use("ggplot")
 
+
 # %% [markdown]
 # ## Import and clean up data
 
-# %% [markdown]
-# ### Read the CSV
+# %%
+def read_csv(file, response):
+    return (
+        pd.read_csv(file)
+        # Remove unused columns
+        .drop(["Lat", "Long"], axis=1)
+        # Make the date a column
+        .melt(id_vars=["Province/State", "Country/Region"], var_name="Date", value_name=response)
+        # Convert the date from string to a real date
+        .assign(**{"Date": lambda df: pd.to_datetime(df["Date"])})
+        # Aggregate provinces
+        .groupby(["Country/Region", "Date"])
+        .sum()
+        # Convert cumulative totals to daily increments
+        .groupby(level="Country/Region")
+        .diff()
+    )
+
 
 # %%
-df = pd.read_csv("time_series_covid19_confirmed_global.csv")
+cases_df = read_csv("time_series_covid19_confirmed_global.csv", "Cases")
 
 # %%
-df.head(3)
-
-# %% [markdown]
-# ### Remove unused columns
+cases_df.head(5)
 
 # %%
-df = df.drop(["Lat", "Long"], axis=1)
-
-# %% tags=[]
-df.head(3)
-
-# %% [markdown]
-# ### Make the date a column
+deaths_df = read_csv("time_series_covid19_deaths_global.csv", "Deaths")
 
 # %%
-df = df.melt(id_vars=["Province/State", "Country/Region"], var_name="Date", value_name="Cases")
+deaths_df.head(5)
 
 # %%
-df.head(3)
-
-# %% [markdown]
-# ### Make values in date column proper dates
+df = cases_df.join(deaths_df)
 
 # %%
-df["Date"] = pd.to_datetime(df["Date"])
-
-# %%
-df.dtypes
-
-# %%
-df.head(3)
-
-# %% [markdown] tags=[]
-# ### Sum provinces, aggregate to country level
-
-# %% tags=[]
-df[(df["Country/Region"] == "United Kingdom") & (df["Date"] == df["Date"].max())]
-
-# %%
-df = df.groupby(["Country/Region", "Date"]).sum()
-
-# %% [markdown]
-# Dataframe is now indexed by country and date and selection can be done via `loc[]`:
-
-# %%
-df.loc["United Kingdom"].iloc[-1]
-
-# %% [markdown] tags=[]
-# ### Convert cumulative total to daily new cases
-
-# %%
-df.loc["United Kingdom"].iloc[-5:]
-
-# %%
-df = df.groupby(level="Country/Region").diff()
-
-# %%
-df.loc["United Kingdom"].iloc[-5:]
+df.head(5)
 
 # %% [markdown]
 # ## Analyze
@@ -147,7 +119,7 @@ def week_start(dt):
 
 # %%
 cases_week_by_week = (
-    df.loc[(countries, slice(week_start(date_from), date_to)), "Cases"]
+    cases_df.loc[(countries, slice(week_start(date_from), date_to)), "Cases"]
     .groupby(level="Country/Region")
     .resample("1W", level="Date")
     .sum()
@@ -164,10 +136,10 @@ plot(cases_week_by_week.unstack(level="Country/Region"))
 # %%
 def moving_average(df, window_days, date_from, date_to):
     return (
-        df.loc[(slice(None), slice(date_from - timedelta(days=window_days-1), date_to)), "Cases"]
+        df.loc[(slice(None), slice(date_from - timedelta(days=window_days-1), date_to)), :]
         .groupby(level="Country/Region")
         .apply(lambda s: s.rolling(7).sum())
-        .loc[(countries, slice(date_from, date_to))]
+        .loc[(countries, slice(date_from, date_to)), :]
     )
 
 
@@ -176,7 +148,7 @@ cases_moving_average = moving_average(df.loc[countries], 7, date_from, date_to)
 cases_moving_average.groupby(level="Country/Region").head(10)
 
 # %%
-plot(cases_moving_average.unstack(level="Country/Region"))
+plot(cases_moving_average.loc[:, "Cases"].unstack(level="Country/Region"))
 
 
 # %% [markdown]
@@ -201,14 +173,19 @@ cases_year_to_year.groupby(["Country/Region", "Year"]).head(5)
 # %%
 def plot_cases_year_to_year(df):
     countries, years, days = df.index.levels
-    fig, axs = plt.subplots(nrows=len(countries), ncols=1, figsize=(16, 24))
-    for ax, country in zip(axs, countries):
-        for year in years:
-            cases = df.loc[(country, year), "Cases"]
-            ax.plot(cases.index, cases.values, label=year)
-        ax.set_title(country)
-        ax.set_xticks([day for day in days if day.endswith("-01")])
-        ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
+    
+    fig, axs = plt.subplots(nrows=len(countries), ncols=2, figsize=(16, 24))
+    plt.subplots_adjust(hspace=0.45)
+    
+    for row, country in zip(axs, countries):
+        for ax, response in zip(row, ["Cases", "Deaths"]):
+            for year in years:
+                cases = df.loc[(country, year)]
+                ax.plot(cases.index, cases[response], label=year)
+
+            ax.set_title(f"{country} - {response}")
+            ax.set_xticks([day for day in days if day.endswith("-01")])
+            ax.legend(loc="center", ncol=2, bbox_to_anchor=(0.5, -0.2))
 
 
 # %%
