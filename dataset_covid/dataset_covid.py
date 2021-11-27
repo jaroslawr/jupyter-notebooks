@@ -134,7 +134,8 @@ plot(cases_week_by_week.unstack(level="Country/Region"))
 # ### Plot moving average of cases
 
 # %%
-def moving_average(df, window_days, date_from, date_to):
+def moving_average(df, date_from, date_to):
+    window_days = 7
     return (
         df.loc[(slice(None), slice(date_from - timedelta(days=window_days-1), date_to)), :]
         .groupby(level="Country/Region")
@@ -144,8 +145,8 @@ def moving_average(df, window_days, date_from, date_to):
 
 
 # %%
-cases_moving_average = moving_average(df.loc[countries], 7, date_from, date_to)
-cases_moving_average.groupby(level="Country/Region").head(10)
+cases_moving_average = moving_average(df.loc[countries], date_from, date_to)
+cases_moving_average.groupby(level="Country/Region").tail(10)
 
 # %%
 plot(cases_moving_average.loc[:, "Cases"].unstack(level="Country/Region"))
@@ -155,19 +156,27 @@ plot(cases_moving_average.loc[:, "Cases"].unstack(level="Country/Region"))
 # ### Compare 2020 and 2021
 
 # %%
-def moving_average_year_to_year(df, window_days, years):
-    return pd.concat(
-        moving_average(df.loc[countries], window_days, pd.to_datetime(f"{year}-04-01"), pd.to_datetime(f"{year}-11-15"))
+def moving_average_year_to_year(df, date_from, date_to):
+    levels = [countries, pd.date_range(date_from, date_to)]
+    index = pd.MultiIndex.from_product(levels, names=df.index.names)
+
+    return (
+        moving_average(df.loc[countries], date_from, date_to)
+        .reindex(index)
         .reset_index()
-        .assign(**{"Year": year, "Day": lambda df: df["Date"].dt.strftime("%m-%d")})
+        .assign(**{
+            "Year": lambda df: df["Date"].dt.year,
+            "Day": lambda df: df["Date"].dt.strftime("%m-%d")
+        })
         .drop(columns=["Date"])
-        for year in years
-    ).set_index(["Country/Region", "Year", "Day"]).sort_index()
+        .set_index(["Country/Region", "Year", "Day"])
+        .sort_index()
+    )
 
 
 # %%
-cases_year_to_year = moving_average_year_to_year(df.loc[countries], window_days=7, years=[2020, 2021])
-cases_year_to_year.groupby(["Country/Region", "Year"]).head(5)
+cases_year_to_year = moving_average_year_to_year(df.loc[countries], pd.to_datetime("2020-01-01"), pd.to_datetime("2021-12-31"))
+cases_year_to_year.head(5)
 
 
 # %%
