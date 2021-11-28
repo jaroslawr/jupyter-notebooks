@@ -140,7 +140,7 @@ def moving_average(df, date_from, date_to):
     return (
         df.loc[(slice(None), slice(date_from - timedelta(days=window_days-1), date_to)), :]
         .groupby(level="Country/Region")
-        .apply(lambda s: s.rolling(7).sum())
+        .apply(lambda s: s.rolling(7).mean())
         .loc[(countries, slice(date_from, date_to)), :]
     )
 
