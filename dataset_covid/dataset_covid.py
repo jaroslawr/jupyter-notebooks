@@ -94,7 +94,8 @@ countries = sorted([
 # %%
 def plot(df):
     fig, ax = plt.subplots(figsize=(16,5))
-    df.plot(ax=ax)
+    for col in df.columns:
+        ax.plot(df.index, df[col], label=col)
     ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
 
 
@@ -186,8 +187,8 @@ def plot_cases_year_to_year(df):
     fig, axs = plt.subplots(nrows=len(countries), ncols=2, figsize=(16, 24))
     plt.subplots_adjust(hspace=0.45)
     
-    for row, country in zip(axs, countries):
-        for ax, response in zip(row, ["Cases", "Deaths"]):
+    for axs_row, country in zip(axs, countries):
+        for ax, response in zip(axs_row, ["Cases", "Deaths"]):
             for year in years:
                 cases = df.loc[(country, year)]
                 ax.plot(cases.index, cases[response], label=year)
