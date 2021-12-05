@@ -184,11 +184,11 @@ def moving_average(df, date_from, date_to):
 
 
 # %%
-cases_moving_average = moving_average(df.loc[countries], date_from, date_to)
-cases_moving_average.groupby(level="country").tail(2)
+moving_average_df = moving_average(df.loc[countries], date_from, date_to)
+moving_average_df.groupby(level="country").tail(2)
 
 # %%
-plot(cases_moving_average.loc[:, "cases_per_mln"].unstack(level="country"), "Cases / 1M Citizens")
+plot(moving_average_df.loc[:, "cases_per_mln"].unstack(level="country"), "Cases / 1M Citizens")
 
 # %%
-plot(cases_moving_average.loc[:, "deaths_per_mln"].unstack(level="country"), "Deaths / 1M Citizens")
+plot(moving_average_df.loc[:, "deaths_per_mln"].unstack(level="country"), "Deaths / 1M Citizens")
