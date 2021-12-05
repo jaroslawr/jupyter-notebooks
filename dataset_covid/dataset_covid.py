@@ -29,7 +29,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from pycountry import countries
+import pycountry
+
 from datetime import datetime, timedelta
 
 # %%
@@ -103,21 +104,19 @@ country_names_to_codes = {}
 country_names_unmapped = []
 for country_name in country_names:
     try:
-        search_results = countries.search_fuzzy(country_name)
+        search_results = pycountry.countries.search_fuzzy(country_name)
         country_names_to_codes[country_name] = search_results[0].alpha_3
     except LookupError:
         country_names_unmapped.append(country_name)
-(len(country_names_to_codes), len(country_names_unmapped), len(country_names))
+
+country_names_to_codes = pd.Series(country_names_to_codes, name="country_code")
+country_names_to_codes.head(5)
 
 # %% [markdown]
 # Country names that could not be mapped:
 
 # %%
 country_names_unmapped
-
-# %%
-country_names_to_codes = pd.Series(country_names_to_codes, name="country_code")
-country_names_to_codes.head(5)
 
 # %% [markdown]
 # Join all the dataframes:
