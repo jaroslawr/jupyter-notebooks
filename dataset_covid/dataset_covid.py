@@ -29,10 +29,16 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from pycountry import countries
 from datetime import datetime, timedelta
 
 # %%
 plt.style.use("ggplot")
+
+# %%
+pd.options.display.max_rows = 999
+pd.options.display.max_columns = 100
+pd.options.display.max_colwidth = 200
 
 
 # %% [markdown]
@@ -44,159 +50,145 @@ def read_csv(file, response):
         pd.read_csv(file)
         # Remove unused columns
         .drop(["Lat", "Long"], axis=1)
+        # Rename the columns
+        .rename(columns={"Country/Region": "country", "Province/State": "province"})
         # Make the date a column
-        .melt(id_vars=["Province/State", "Country/Region"], var_name="Date", value_name=response)
+        .melt(id_vars=["province", "country"], var_name="date", value_name=response)
         # Convert the date from string to a real date
-        .assign(**{"Date": lambda df: pd.to_datetime(df["Date"])})
+        .assign(**{"date": lambda df: pd.to_datetime(df["date"])})
         # Aggregate provinces
-        .groupby(["Country/Region", "Date"])
+        .groupby(["country", "date"])
         .sum()
         # Convert cumulative totals to daily increments
-        .groupby(level="Country/Region")
+        .groupby(level="country")
         .diff()
     )
 
 
 # %%
-cases_df = read_csv("time_series_covid19_confirmed_global.csv", "Cases")
+cases_df = read_csv("time_series_covid19_confirmed_global.csv", "cases")
 
 # %%
 cases_df.head(5)
 
 # %%
-deaths_df = read_csv("time_series_covid19_deaths_global.csv", "Deaths")
+deaths_df = read_csv("time_series_covid19_deaths_global.csv", "deaths")
 
 # %%
 deaths_df.head(5)
 
-# %%
-df = cases_df.join(deaths_df)
+# %% [markdown]
+# Read population data from https://data.worldbank.org/indicator/SP.POP.TOTL?view=chart:
 
 # %%
-df.head(5)
+pop_df = (
+    pd.read_csv("worldbank_pop.csv")
+    .loc[:, ["Country Code", "2020"]]
+    .assign(pop_mln=lambda df: df["2020"]/1_000_000)
+    .rename(columns={"Country Code": "country_code"})
+    .loc[:, ["country_code", "pop_mln"]]
+    .set_index("country_code")
+    .sort_index()
+)
+
+# %%
+pop_df.head(3)
+
+# %% [markdown]
+# Map country names from the John-Hopkins University Covid datasets to three letter ISO codes using pycountry:
+
+# %%
+country_names = cases_df.index.levels[0].values
+country_names_to_codes = {}
+country_names_unmapped = []
+for country_name in country_names:
+    try:
+        search_results = countries.search_fuzzy(country_name)
+        country_names_to_codes[country_name] = search_results[0].alpha_3
+    except LookupError:
+        country_names_unmapped.append(country_name)
+(len(country_names_to_codes), len(country_names_unmapped), len(country_names))
+
+# %% [markdown]
+# Country names that could not be mapped:
+
+# %%
+country_names_unmapped
+
+# %%
+country_names_to_codes = pd.Series(country_names_to_codes, name="country_code")
+country_names_to_codes.head(5)
+
+# %% [markdown]
+# Join all the dataframes:
+
+# %%
+df = (
+    cases_df.join(deaths_df)
+    .join(country_names_to_codes, on="country", how="inner")
+    .join(pop_df, on="country_code", how="inner")
+    .drop(columns="country_code")
+    .loc[lambda df: df["pop_mln"].notna()]
+    .assign(cases_per_mln=lambda df: df["cases"] / df["pop_mln"],
+            deaths_per_mln=lambda df: df["deaths"] / df["pop_mln"])
+)
+
+# %%
+df.groupby("country").tail(1).head(30)
+
+# %% [markdown]
+# Countries where the population could not be joined and are hence not included in the final dataframe:
+
+# %%
+set(cases_df.index.levels[0].values) - set(df.index.levels[0].values)
 
 # %% [markdown]
 # ## Analyze
 
 # %%
-date_from = pd.to_datetime("2021-01-01")
+date_from = pd.to_datetime("2021-06-01")
 date_to   = pd.to_datetime("2021-12-31")
 
 countries = sorted([
-    "Poland",
-    "Czechia",
+    "US",
     "Germany",
-    "Austria",
-    "United Kingdom"
+    "United Kingdom",
+    "Russia",
+    "Poland",
+    "Ukraine",
+    "Czechia"
 ])
 
 
 # %%
-def plot(df):
+def plot(df, plot_title):
     fig, ax = plt.subplots(figsize=(16,5))
     for col in df.columns:
         ax.plot(df.index, df[col], label=col)
     ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
+    ax.set_title(plot_title)
 
 
 # %% [markdown]
-# ### Plot cases day by day
-
-# %%
-cases_day_by_day = df.loc[(countries, slice(date_from, date_to)), "Cases"]
-cases_day_by_day.groupby(level="Country/Region").head()
-
-# %%
-plot(cases_day_by_day.unstack(level="Country/Region"))
-
-
-# %% [markdown]
-# ### Plot cases week-by-week
-
-# %%
-def week_start(dt):
-    return dt - timedelta(days=dt.weekday())
-
-
-# %%
-cases_week_by_week = (
-    cases_df.loc[(countries, slice(week_start(date_from), date_to)), "Cases"]
-    .groupby(level="Country/Region")
-    .resample("1W", level="Date")
-    .sum()
-)
-cases_week_by_week.groupby(level="Country/Region").head()
-
-# %%
-plot(cases_week_by_week.unstack(level="Country/Region"))
-
-
-# %% [markdown]
-# ### Plot moving average of cases
+# ### Moving average of cases and deaths
 
 # %%
 def moving_average(df, date_from, date_to):
-    window_days = 7
+    window_in_days = 7
     return (
-        df.loc[(slice(None), slice(date_from - timedelta(days=window_days-1), date_to)), :]
-        .groupby(level="Country/Region")
-        .apply(lambda s: s.rolling(7).mean())
+        df.loc[(slice(None), slice(date_from - timedelta(days=window_in_days-1), date_to)), :]
+        .groupby(level="country")
+        .apply(lambda s: s.rolling(window_in_days).mean())
         .loc[(countries, slice(date_from, date_to)), :]
     )
 
 
 # %%
 cases_moving_average = moving_average(df.loc[countries], date_from, date_to)
-cases_moving_average.groupby(level="Country/Region").tail(10)
+cases_moving_average.groupby(level="country").tail(2)
 
 # %%
-plot(cases_moving_average.loc[:, "Cases"].unstack(level="Country/Region"))
-
-
-# %% [markdown]
-# ### Compare 2020 and 2021
+plot(cases_moving_average.loc[:, "cases_per_mln"].unstack(level="country"), "Cases / 1M Citizens")
 
 # %%
-def moving_average_year_to_year(df, date_from, date_to):
-    levels = [countries, pd.date_range(date_from, date_to)]
-    index = pd.MultiIndex.from_product(levels, names=df.index.names)
-
-    return (
-        moving_average(df.loc[countries], date_from, date_to)
-        .reindex(index)
-        .reset_index()
-        .assign(**{
-            "Year": lambda df: df["Date"].dt.year,
-            "Day": lambda df: df["Date"].dt.strftime("%m-%d")
-        })
-        .drop(columns=["Date"])
-        .set_index(["Country/Region", "Year", "Day"])
-        .sort_index()
-    )
-
-
-# %%
-cases_year_to_year = moving_average_year_to_year(df.loc[countries], pd.to_datetime("2020-01-01"), pd.to_datetime("2021-12-31"))
-cases_year_to_year.head(5)
-
-
-# %%
-def plot_cases_year_to_year(df):
-    countries, years, days = df.index.levels
-    
-    fig, axs = plt.subplots(nrows=len(countries), ncols=2, figsize=(16, 24))
-    plt.subplots_adjust(hspace=0.45)
-    
-    for axs_row, country in zip(axs, countries):
-        for ax, response in zip(axs_row, ["Cases", "Deaths"]):
-            for year in years:
-                cases = df.loc[(country, year)]
-                ax.plot(cases.index, cases[response], label=year)
-
-            ax.set_title(f"{country} - {response}")
-            ax.set_xticks([day for day in days if day.endswith("-01")])
-            ax.legend(loc="center", ncol=2, bbox_to_anchor=(0.5, -0.2))
-
-
-# %%
-plot_cases_year_to_year(cases_year_to_year)
+plot(cases_moving_average.loc[:, "deaths_per_mln"].unstack(level="country"), "Deaths / 1M Citizens")
