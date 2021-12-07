@@ -27,8 +27,10 @@
 # %%
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+import itertools
 import pycountry
 
 from datetime import datetime, timedelta
@@ -218,22 +220,35 @@ def moving_average_with_1y_shift(df):
 
 # %%
 def plot_moving_average_with_1y_shift(df, countries, date_from, date_to):
-    plot_df = (
-        moving_average_with_1y_shift(df)
-        .loc[(countries, slice(date_from, date_to)), :]
+    plot_df = moving_average_with_1y_shift(df).loc[(countries, slice(date_from, date_to)), :]
+
+    countries = plot_df.index.unique(level="country")
+    responses = ["cases_per_mln", "deaths_per_mln"]
+
+    x_locator = mpl.dates.MonthLocator()
+    x_formatter = mpl.dates.DateFormatter("%b %d")
+
+    fig, axs = plt.subplots(
+        figsize=(16, 28),
+        tight_layout=True,
+        nrows=len(countries),
+        ncols=len(responses),
+        sharex=True,
+        sharey="col"
     )
 
-    fig, axs = plt.subplots(nrows=len(countries), ncols=2, figsize=(16, 32), sharex=True, sharey="col")
-    plt.subplots_adjust(hspace=0.45)
+    for ax, (country, response) in zip(axs.flat, itertools.product(countries, responses)):
+        country_df = plot_df.loc[country, :]
 
-    for axs_row, country in zip(axs, plot_df.index.unique(level="country")):
-        for ax, response in zip(axs_row, ["cases_per_mln", "deaths_per_mln"]):
-            country_df = plot_df.loc[country, :]
-            ax.plot(country_df.index, country_df[response], label="2021")
-            ax.plot(country_df.index, country_df[f"{response}_1y_ago"], linestyle="dashed", label="2020")
-            ax.set_title(f"{country} - {response}")
-            ax.legend(loc="center", ncol=2, bbox_to_anchor=(0.5, -0.2))
-            ax.tick_params(axis="x", reset=True)
+        ax.plot(country_df.index, country_df[f"{response}_1y_ago"], color="grey", linestyle="dashed", label=str(date_from.year-1))
+        ax.plot(country_df.index, country_df[response], label=str(date_from.year))
+
+        ax.set_title(f"{country} - {response}")
+        ax.set_xlim(date_from, date_to)
+        ax.xaxis.set_major_locator(x_locator)
+        ax.xaxis.set_major_formatter(x_formatter)
+        ax.xaxis.set_tick_params(labelbottom=True, rotation=45)
+        ax.legend(loc="upper center", ncol=2)
 
 
 # %%
