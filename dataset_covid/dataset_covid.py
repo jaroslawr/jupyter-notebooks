@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.13.3
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -208,14 +208,9 @@ plot_moving_average(
 
 # %%
 def moving_average_with_1y_shift(df):
-    ma = moving_average(df)
-    shifted_ma = (
-        ma.loc[:, ["cases_per_mln", "deaths_per_mln"]]
-        .groupby(level="country")
-        .shift(365)
-        .rename(columns=lambda c: f"{c}_1y_ago")
-    )
-    return ma.join(shifted_ma)
+    mavg = moving_average(df)
+    mavg_1y_ago = mavg.groupby(level="country").shift(365)
+    return mavg.join(mavg_1y_ago, rsuffix="_1y_ago")
 
 
 # %%
@@ -225,9 +220,6 @@ def plot_moving_average_with_1y_shift(df, countries, date_from, date_to):
     countries = plot_df.index.unique(level="country")
     responses = ["cases_per_mln", "deaths_per_mln"]
 
-    x_locator = mpl.dates.MonthLocator()
-    x_formatter = mpl.dates.DateFormatter("%b %d")
-
     fig, axs = plt.subplots(
         figsize=(16, 28),
         tight_layout=True,
@@ -236,6 +228,9 @@ def plot_moving_average_with_1y_shift(df, countries, date_from, date_to):
         sharex=True,
         sharey="col"
     )
+
+    x_locator = mpl.dates.MonthLocator()
+    x_formatter = mpl.dates.DateFormatter("%b %d")
 
     for ax, (country, response) in zip(axs.flat, itertools.product(countries, responses)):
         country_df = plot_df.loc[country, :]
