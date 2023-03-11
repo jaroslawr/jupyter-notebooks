@@ -6,9 +6,9 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.0
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -165,5 +165,5 @@ def plot_boxplot():
     ax.boxplot([n1, n2, n3], labels=["N(-1.0, 1.0)", "N(0.0, 1.0)", "N(1.0, 1.0)"])
 
 
-# %%
+# %% tags=[]
 plot_boxplot()

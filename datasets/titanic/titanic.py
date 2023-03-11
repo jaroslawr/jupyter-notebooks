@@ -6,9 +6,9 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.2
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -166,5 +166,5 @@ survivors_by_class_and_age.unstack(level=0)
 # %%
 sns.catplot(data=df, y="age_bucket", hue="survived", col="pclass", kind="count", height=4)
 
-# %%
+# %% tags=[]
 sns.catplot(data=df, y="age_bucket", x="survived", col="pclass", kind="point", join=False, orient="h", capsize=0.25, height=4)

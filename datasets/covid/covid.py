@@ -6,9 +6,9 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.3
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -246,7 +246,7 @@ def plot_moving_average_with_1y_shift(df, countries, date_from, date_to):
         ax.legend(loc="upper center", ncol=2)
 
 
-# %%
+# %% tags=[]
 plot_moving_average_with_1y_shift(
     df=df,
     countries=countries,
