@@ -6,9 +6,9 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -71,6 +71,48 @@ def usd_exchange_rates_df():
         ]
     )
 
+
+# %% [markdown]
+# ## Series, dataframes and indexes
+
+# %% [markdown]
+# The basic pandas data type is a series which is a single list of data points:
+
+# %%
+series = pd.Series(["a", "b", "c", "d"])
+series
+
+# %% [markdown]
+# The data points have an associated index: a set of labels for the data points, displayed in the left column of the output above. The default index consists simply of the position of the point in the series. Here is a series with an explicit index:
+
+# %%
+series = pd.Series(["e", "f", "g", "h"], index=["a", "b", "c", "d"])
+series
+
+# %% [markdown]
+# The elements can be accessed using the index values via the `loc[]` method:
+
+# %%
+series = pd.Series(["e", "f", "g", "h"], index=["a", "b", "c", "d"])
+series.loc["a"]
+
+# %% [markdown]
+# Selection by position in the list of data points is always possible using `iloc[]` regardless of what the index is:
+
+# %%
+series = pd.Series(["e", "f", "g", "h"], index=["a", "b", "c", "d"])
+series.iloc[0]
+
+# %% [markdown]
+# The key in the index can consists of multiple values, in which case the index is called a *multi-index*. Each value in the tuple is called a *level* of the index and each level can optionally have a name:
+
+# %%
+index = pd.MultiIndex.from_tuples([("a", "a"), ("a", "b"), ("b", "a"), ("b", "b")], names=["l1", "l2"])
+series = pd.Series(["e", "f", "g", "h"], index=index)
+series
+
+# %% [markdown]
+# A dataframe is a collection of series and it has two indexes: a row index, mapping a row key to a row, and a column index, mapping a column key to a series.
 
 # %% [markdown]
 # ## Selecting rows and columns
