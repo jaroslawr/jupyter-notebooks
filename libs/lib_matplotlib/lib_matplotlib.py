@@ -46,7 +46,7 @@ plt.style.use("ggplot")
 
 
 # %% [markdown]
-# ## X-Y plots
+# ## y=f(x) plots
 
 # %% [markdown]
 # ### Plot multiple series on same plot
@@ -167,3 +167,20 @@ def plot_boxplot():
 
 # %% tags=[]
 plot_boxplot()
+
+
+# %% [markdown]
+# ## Scatter plots
+
+# %% tags=[]
+def scatterplot():
+    x = np.random.normal(0, 1, size=200)
+    y = np.random.normal(0, 1, size=200)
+
+    fig, ax = plt.subplots()
+    ax.set_title("Scatter plot")
+    ax.scatter(x, y, alpha=0.5)
+
+
+# %% tags=[]
+scatterplot()
