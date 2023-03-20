@@ -273,7 +273,33 @@ df[df["Year"].isin([
 # ## Grouping
 
 # %% [markdown]
-# ### Reduce group-by-group and series-by-series with agg()
+# ### Reduce group-by-group with apply()
+
+# %% [markdown]
+# `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group. The form of the result depends of the return type of `func`.
+
+# %% [markdown] tags=[]
+# **Case 1:** `func` returns a scalar - the result of `apply(func)` is a series indexed by the group key:
+
+# %% tags=[]
+df.groupby("Currency")[["Currency/USD"]].apply(lambda df: np.mean(df.values))
+
+# %% [markdown] tags=[]
+# **Case 2:** `func` returns a series - the result of `apply(func)` is a dataframe indexed by the group key, with columns given by the index of the returned series:
+
+# %% tags=[]
+df = usd_exchange_rates_df()
+df.groupby("Currency")[["Currency/USD", "USD/Currency"]].apply(lambda df: df.mean())
+
+# %% [markdown] tags=[]
+# **Case 3:** `func` returns a dataframe - the result of `apply(func)` is a dataframe with a multi-index and with same columns as the dataframe returned by `func`. The multi-index consists of a group key level concatenated with levels of the index of the dataframes returned by `func`:
+
+# %% tags=[]
+df = usd_exchange_rates_df()
+df.groupby("Currency").apply(lambda df: df.drop(columns=["Currency"]).set_index(["Year"]).rolling(3).mean().dropna())
+
+# %% [markdown]
+# ### Reduce group-by-group series-by-series with agg()
 
 # %% [markdown]
 # `df.groupby().agg(func)` will call `func(series)` once for each series of every group.
@@ -307,21 +333,6 @@ df.groupby("Currency")[["Currency/USD", "USD/Currency"]].agg(
 # %%
 df = usd_exchange_rates_df()
 df.groupby("Currency")["Currency/USD"].agg(average=np.mean)
-
-# %% [markdown]
-# ### Reduce group-by-group with apply()
-
-# %% [markdown]
-# `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group.
-#
-# `func` can return:
-# - a scalar - making the result of `apply()` a series
-# - a series - making the result of `apply()` a series
-# - a dataframe - making the result of `apply()` a dataframe
-
-# %%
-df = usd_exchange_rates_df()
-df.groupby("Currency")[["Currency/USD", "USD/Currency"]].apply(lambda df: df.mean())
 
 # %% [markdown]
 # ### Transform rows one-by-one with transform()
@@ -369,6 +380,6 @@ df.pivot(index=["Year"], columns=["Currency"], values=["Currency/USD", "USD/Curr
 # %% [markdown]
 # ### Unpivot with melt()
 
-# %%
+# %% tags=[]
 df = usd_exchange_rates_df()
 df.melt(id_vars=["Year", "Currency"], var_name="Direction", value_name="Value")
