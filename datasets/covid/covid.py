@@ -60,6 +60,7 @@ def read_csv(file, response):
         # Convert the date from string to a real date
         .assign(**{"date": lambda df: pd.to_datetime(df["date"])})
         # Aggregate provinces
+        .drop(columns=["province"])
         .groupby(["country", "date"])
         .sum()
         # Convert cumulative totals to daily increments
@@ -164,7 +165,7 @@ countries = sorted([
 
 # %%
 def moving_average(df):
-    return df.groupby(level="country").apply(lambda s: s.rolling(7).mean())
+    return df.groupby(level="country", group_keys=False).apply(lambda s: s.rolling(7).mean())
 
 
 # %%
