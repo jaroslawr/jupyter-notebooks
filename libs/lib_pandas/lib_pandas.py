@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.4
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -273,30 +273,24 @@ df[df["Year"].isin([
 # ## Grouping
 
 # %% [markdown]
-# ### Reduce group-by-group with apply()
+# ### Reduce directly using DataFrameGroupBy/SeriesGroupBy methods
 
 # %% [markdown]
-# `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group. The form of the result depends of the return type of `func`.
+# `df.groupby()` returns a `DataFrameGroupBy` that supports calls like `mean()`, `std()`, `min()`, `max()`, etc.:
 
-# %% [markdown] tags=[]
-# **Case 1:** `func` returns a scalar - the result of `apply(func)` is a series indexed by the group key:
-
-# %% tags=[]
-df.groupby("Currency")[["Currency/USD"]].apply(lambda df: np.mean(df.values))
-
-# %% [markdown] tags=[]
-# **Case 2:** `func` returns a series - the result of `apply(func)` is a dataframe indexed by the group key, with columns given by the index of the returned series:
-
-# %% tags=[]
+# %%
 df = usd_exchange_rates_df()
-df.groupby("Currency")[["Currency/USD", "USD/Currency"]].apply(lambda df: df.mean())
+df.groupby("Currency")[["Currency/USD", "USD/Currency"]].mean()
 
-# %% [markdown] tags=[]
-# **Case 3:** `func` returns a dataframe - the result of `apply(func)` is a dataframe with a multi-index and with same columns as the dataframe returned by `func`. The multi-index consists of a group key level concatenated with levels of the index of the dataframes returned by `func`:
+# %% [markdown]
+# You can compute a compound expression for each group without repeating the `groupby()` step by using `pipe()`:
 
-# %% tags=[]
+# %%
 df = usd_exchange_rates_df()
-df.groupby("Currency").apply(lambda df: df.drop(columns=["Currency"]).set_index(["Year"]).rolling(3).mean().dropna())
+(
+    df.groupby("Currency")[["Currency/USD", "USD/Currency"]]
+    .pipe(lambda currency: currency.quantile(0.75) - currency.quantile(0.25))
+)
 
 # %% [markdown]
 # ### Reduce group-by-group series-by-series with agg()
@@ -347,6 +341,32 @@ df = usd_exchange_rates_df()
 df.groupby("Currency")[["Currency/USD", "USD/Currency"]].transform(lambda df: df.mean())
 
 # %% [markdown]
+# ### Reduce group-by-group with apply()
+
+# %% [markdown]
+# `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group. The form of the result depends of the return type of `func`.
+
+# %% [markdown]
+# **Case 1:** `func` returns a scalar - the result of `apply(func)` is a series indexed by the group key:
+
+# %%
+df.groupby("Currency")[["Currency/USD"]].apply(lambda df: np.mean(df.values))
+
+# %% [markdown]
+# **Case 2:** `func` returns a series - the result of `apply(func)` is a dataframe indexed by the group key, with columns given by the index of the returned series:
+
+# %%
+df = usd_exchange_rates_df()
+df.groupby("Currency")[["Currency/USD", "USD/Currency"]].apply(lambda df: df.mean())
+
+# %% [markdown]
+# **Case 3:** `func` returns a dataframe - the result of `apply(func)` is a dataframe with a multi-index and with same columns as the dataframe returned by `func`. The multi-index consists of a group key level concatenated with levels of the index of the dataframes returned by `func`:
+
+# %%
+df = usd_exchange_rates_df()
+df.groupby("Currency").apply(lambda df: df.drop(columns=["Currency"]).set_index(["Year"]).rolling(3).mean().dropna())
+
+# %% [markdown]
 # ## Pivoting and unpivoting
 
 # %% [markdown]
@@ -380,6 +400,6 @@ df.pivot(index=["Year"], columns=["Currency"], values=["Currency/USD", "USD/Curr
 # %% [markdown]
 # ### Unpivot with melt()
 
-# %% tags=[]
+# %%
 df = usd_exchange_rates_df()
 df.melt(id_vars=["Year", "Currency"], var_name="Direction", value_name="Value")
