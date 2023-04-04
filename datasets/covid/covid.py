@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.4
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -58,7 +58,7 @@ def read_csv(file, response):
         # Make the date a column
         .melt(id_vars=["province", "country"], var_name="date", value_name=response)
         # Convert the date from string to a real date
-        .assign(**{"date": lambda df: pd.to_datetime(df["date"])})
+        .assign(**{"date": lambda df: pd.to_datetime(df["date"], format="%m/%d/%y")})
         # Aggregate provinces
         .drop(columns=["province"])
         .groupby(["country", "date"])
@@ -247,7 +247,7 @@ def plot_moving_average_with_1y_shift(df, countries, date_from, date_to):
         ax.legend(loc="upper center", ncol=2)
 
 
-# %% tags=[]
+# %%
 plot_moving_average_with_1y_shift(
     df=df,
     countries=countries,
