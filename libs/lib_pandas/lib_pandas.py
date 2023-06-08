@@ -14,105 +14,237 @@
 # ---
 
 # %% [markdown]
-# # Pandas reference
+# # Data analysis with Pandas
 
 # %% [markdown]
-# Quick reference on getting common data processing tasks done with Pandas.
+# This is a guide to doing data analysis with Pandas written with a particular goal: to help understand the most important concepts and usage patterns in a way that sticks with you, as opposed to covering every possible application. We try to achieve this by laying out and following some specific principles:
+#
+# - Build deep understanding of general concepts:
+#     - the basic Panas data structures: series, dataframes and indexes
+#     - wide classes of operations on data: selection, grouping, aggregations and transformations
+#     - shapes that datasets come in and how to convert between them: long vs wide
+# - Use well chosen examples:
+#     - preferrably real datasets
+#     - understandable for a broad audience
+#     - interesting
+#     - distinct from one another in structure
+# - Stay concise, avoid minutiae that can be easily looked up in the documentation, provide pointers to references instead
+#
 
 # %% [markdown]
-# ## Setup
-
-# %% [markdown]
-# ### Import libraries
+# Before we begin we need to import all the libraries we will use. We also change some options that I almost always find useful to change:
 
 # %%
+# Import libraries
 import numpy as np
 import pandas as pd
 
-# %% [markdown]
-# ### Show more data in dataframes
-
-# %%
+# Make Pandas less eager to hide data in dataframes with "..."
 pd.options.display.max_rows = 999
 pd.options.display.max_columns = 100
 pd.options.display.max_colwidth = 200
 
-# %% [markdown]
-# ### Set floating point precision
-
-# %%
+# Sensible floating point precision for basic use cases
 pd.options.display.precision = 3
 
+# Short exception tracebacks
+# %xmode Plain
 
 # %% [markdown]
-# ## Datasets
+# ## Pandas data structures
 
 # %% [markdown]
-# ### USD exchange rates (yearly averages)
+# We begin by looking into the fundamental high-level Pandas data structures: series, data frames and indexes. If you try to use Pandas without understanding the data structures and the relations between them, it gets confusing very easily. On the other hand learning the data structures can feel dry compared to working with real datasets. We cover only the most important basics here to keep things interesting and later revisit in more depth when need arises.
 
 # %% [markdown]
-# Data from https://www.irs.gov/individuals/international-taxpayers/yearly-average-currency-exchange-rates:
+# ### Series and basic indexes
+
+# %% [markdown]
+# A series holds an array of values:
 
 # %%
-def usd_exchange_rates_df():
-    return pd.DataFrame(
-        columns=("Year", "Currency", "Currency/USD", "USD/Currency"),
-        data=[
-            [pd.to_datetime("2016-12-31"), "EUR", 1.064, 0.940],
-            [pd.to_datetime("2017-12-31"), "EUR", 1.083, 0.923],
-            [pd.to_datetime("2018-12-31"), "EUR", 1.179, 0.848],
-            [pd.to_datetime("2019-12-31"), "EUR", 1.120, 0.893],
-            [pd.to_datetime("2020-12-31"), "EUR", 1.140, 0.877],
-            [pd.to_datetime("2016-12-31"), "GBP", 1.299, 0.770],
-            [pd.to_datetime("2017-12-31"), "GBP", 1.238, 0.808],
-            [pd.to_datetime("2018-12-31"), "GBP", 1.333, 0.750],
-            [pd.to_datetime("2019-12-31"), "GBP", 1.276, 0.784],
-            [pd.to_datetime("2020-12-31"), "GBP", 1.284, 0.779],
-        ]
-    )
-
+primes = pd.Series([2, 3, 5, 7, 11])
+primes
 
 # %% [markdown]
-# ## Series, dataframes and indexes
+# The right column of the output simply shows the values in the series. `dtype: int64` refers to the data type of the values.
 
 # %% [markdown]
-# The basic pandas data type is a series which is a single list of data points:
+# The left column of the output shows labels corresponding to the values in the series. The labels are part of the *index* that is a part of every series. By default the series is indexed simply using position of each value in the series:
 
 # %%
-series = pd.Series(["a", "b", "c", "d"])
+primes = pd.Series([2, 3, 5, 7, 11])
+primes.index
+
+# %% [markdown]
+# `.loc[]` call for a series takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic array indexing:
+
+# %%
+primes = pd.Series([2, 3, 5, 7, 11])
+primes.loc[0]
+
+# %% [markdown]
+# The index is what makes a series something more than a simple array. It makes it possible to refer to the values in the series by whatever label is appropriate: by a string, by a date, by a pair of numbers, ... It also plays a role similar to a database index, hence the name: it speeds up operations like joins that have to lookup by this label repeatedly. Here is how you construct a series with an explicit index that does not simply use position in the series as the label of each value:
+
+# %%
+primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
+primes
+
+# %% [markdown]
+# Now you can lookup by label:
+
+# %%
+primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
+primes.loc["p0"]
+
+# %% [markdown]
+# Lookup by index is nevertheless always possible using `.iloc[]`:
+
+# %%
+primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
+primes.iloc[2]
+
+# %% [markdown]
+# You can explicitly construct a `pd.Index` instance and pass it in the `pd.Series` constructor:
+
+# %%
+index = pd.Index(["p0", "p1", "p2", "p3", "p4"])
+series = pd.Series([2, 3, 5, 7, 11], index=index)
 series
 
 # %% [markdown]
-# The data points have an associated index: a set of labels for the data points, displayed in the left column of the output above. The default index consists simply of the position of the point in the series. Here is a series with an explicit index:
+# ### Data frames
+
+# %% [markdown]
+# Conceptually a dataframe is a collection of column series that share a common row index:
 
 # %%
-series = pd.Series(["e", "f", "g", "h"], index=["a", "b", "c", "d"])
+df = pd.DataFrame({"a": series, "b": series})
+df
+
+# %%
+df = pd.DataFrame({"a": series, "b": series})
+display(id(df.index))
+display(id(df["a"].index))
+display(id(df["b"].index))
+
+# %% [markdown]
+# Columns get labels through an additional index object, called the column index:
+
+# %%
+df = pd.DataFrame({"a": series, "b": series})
+df.columns
+
+# %% [markdown]
+# Many Pandas methods work with either the row index or column index depending on the value of the `axis` keyword argument. For example removing rows by label and removing columns using a label or a set of labels are both done using the `drop` method:
+
+# %%
+df = pd.DataFrame({"a": series, "b": series})
+df.drop(["p0", "p1"])
+
+# %%
+df = pd.DataFrame({"a": series, "b": series})
+df.drop("a", axis=1)
+
+# %% [markdown]
+# ### Jupyter representation of the data structures
+
+# %% [markdown]
+# It is good to learn how the Jupyter cell output corresponds to the underlying Pandas data structures and its attributes. Often we will not construct a `pd.Series` or `pd.DataFrame` directly, but receive one as a result of some sequence of Pandas operations. In this case we do not know up front whether it is a `pd.Series` or `pd.DataFrame`, what the index is, whether the index has a name, etc. You can inspect the result, for example call `type(result)`, but it is more efficient to simply learn what is shown where and how.
+
+# %% [markdown]
+# A `pd.Series` is displayed in monospaced font (unlike `pd.DataFrame`) and as the below example illustrates its Jupyter representation has at most four parts:
+#
+# - top left corner: index name, only shown if present
+# - left column: index labels  
+# - right column: series values
+# - bottom line: series name, if present, and dtype of series values
+
+# %%
+index = pd.Index(["p0", "p1", "p2", "p3", "p4"], name="key")
+series = pd.Series([2, 3, 5, 7, 11], index=index, name="primes")
 series
 
 # %% [markdown]
-# The elements can be accessed using the index values via the `loc[]` method:
+# A dataframe with one column is something different than a series:
 
 # %%
-series = pd.Series(["e", "f", "g", "h"], index=["a", "b", "c", "d"])
-series.loc["a"]
+index = pd.Index(["p0", "p1", "p2", "p3", "p4"], name="key")
+series = pd.Series([2, 3, 5, 7, 11], index=index, name="primes")
+series.to_frame()
 
 # %% [markdown]
-# Selection by position in the list of data points is always possible using `iloc[]` regardless of what the index is:
+# ## Dataset: mtcars
+
+# %% [markdown]
+# We will use the mtcars dataset as the default basic example in the following sections. Its contents are easy to understand and fairly interesting, while it also is provided in one of the simplest and most commonly encountered ways: each row describes a single unique unit of observation (a car) and each column is a different measurement for the same unit of observation (miles/gallon, number of cylinders, horsepower etc.):
 
 # %%
-series = pd.Series(["e", "f", "g", "h"], index=["a", "b", "c", "d"])
-series.iloc[0]
+CARS = pd.read_csv("mtcars.csv")
+
+def cars():
+    # Return a fresh copy every time so that examples do not affect each other
+    return CARS.copy()
+
 
 # %% [markdown]
-# The key in the index can consists of multiple values, in which case the index is called a *multi-index*. Each value in the tuple is called a *level* of the index and each level can optionally have a name:
+# ## Examining datasets
+
+# %% [markdown]
+# `.head(n)` returns the first `n` rows, `.tail(n)` the last `n` rows, and `.sample(n)` random `n` rows:
 
 # %%
-index = pd.MultiIndex.from_tuples([("a", "a"), ("a", "b"), ("b", "a"), ("b", "b")], names=["l1", "l2"])
-series = pd.Series(["e", "f", "g", "h"], index=index)
-series
+df = cars()
+display(df.head(2))
+display(df.tail(2))
+display(df.sample(2))
 
 # %% [markdown]
-# A dataframe is a collection of series and it has two indexes: a row index, mapping a row key to a row, and a column index, mapping a column key to a series.
+# `len(df)` returns the number of rows in a dataframe:
+
+# %%
+df = cars()
+len(df)
+
+# %% [markdown]
+# `count()` returns number of rows with non-null value. Since this differs for each column series, when called on a dataframe it returns a series with a single value for each column label:
+
+# %%
+df = cars()
+df.count()
+
+# %% [markdown]
+# Describe will also show the number of non-null rows for given column, but along with basic summary statistics:
+
+# %%
+df = cars()
+df.describe()
+
+# %% [markdown]
+# `value_counts()` on the given column series returns a series describing how many rows take each unique value:
+
+# %%
+df = cars()
+df["cyl"].value_counts()
+
+# %% [markdown]
+# `value_counts(normalize=True)` returns a series describing what fraction of all rows have each unique value, rather than the raw counts:
+
+# %%
+df = cars()
+df["cyl"].value_counts(normalize=True)
+
+# %% [markdown]
+# `unique()` returns only the unique value themselves:
+
+# %%
+df["cyl"].unique()
+
+# %% [markdown]
+# `nunique()` returns the number of unique values:
+
+# %%
+df["cyl"].nunique()
 
 # %% [markdown]
 # ## Selecting rows and columns
@@ -124,43 +256,43 @@ series
 # Select rows with `[]`:
 
 # %%
-df = usd_exchange_rates_df()
-df[df["Currency"] == "EUR"]
+df = cars()
+df[df["gear"] == 5]
 
 # %% [markdown]
 # `[]` will accept a callable as argument for cases where a reference to the dataframe is not available, for example when chaining method calls on the dataframe:
 
 # %%
-df = usd_exchange_rates_df()
-df[lambda df: df["Year"] >= pd.to_datetime("2018-12-31")][lambda df: df["Currency"] == "EUR"]
+df = cars()
+df[lambda df: df["gear"] == 5][lambda df: df["cyl"] == 4]
 
 # %% [markdown]
 # Select a single column as a `pd.Series` with `[]`:
 
 # %%
-df = usd_exchange_rates_df()
-df["Currency/USD"]
+df = cars()
+df["gear"].head(5)
 
 # %% [markdown]
 # Select one or more columns as a `pd.DataFrame` by passing a list to `[]`:
 
 # %%
-df = usd_exchange_rates_df()
-df[["Currency/USD"]]
+df = cars()
+df[["gear"]].head(5)
 
 # %% [markdown]
 # Selection of rows and of columns can be combined:
 
 # %%
-df = usd_exchange_rates_df()
-df[df["Currency"] == "EUR"]["Currency/USD"]
+df = cars()
+df[df["gear"] == 5]["cyl"]
 
 # %% [markdown]
 # Note that chaining `[]` does not work for the purpose of modifying or inserting data:
 
 # %%
-df = usd_exchange_rates_df()
-df[df["Currency"] == "EUR"]["Currency/USD"] = 5
+df = cars()
+df[df["gear"] == 5]["cyl"] = 3
 
 # %% [markdown]
 # `df[][]=` translates to a `df.__getitem__()` call on the data frame and then a `.__setitem__()` call on the resulting object. The problem is that the `df.__getitem__()` call might return either a view or a copy of the dataframe, so the dataframe might or might not be modified.
@@ -174,162 +306,192 @@ df[df["Currency"] == "EUR"]["Currency/USD"] = 5
 # Select rows:
 
 # %%
-df = usd_exchange_rates_df()
-df.loc[df["Currency"] == "EUR"]
+df = cars()
+df.loc[df["gear"] == 5]
 
 # %% [markdown]
 # `loc[]` will accept a callable as argument for cases where a reference to the dataframe is not available, for example when chaining method calls on the dataframe:
 
 # %%
-df = usd_exchange_rates_df()
-(df.loc[lambda df: df["Year"] >= pd.to_datetime("2018-12-31")]
- .loc[lambda df: df["Currency"] == "EUR"])
+df = cars()
+df.loc[lambda df: df["gear"] == 5].loc[lambda df: df["cyl"] == 4]
 
 # %% [markdown]
 # Select a single column as a `pd.Series`:
 
 # %%
-df = usd_exchange_rates_df()
-df.loc[:, "Currency/USD"]
+df = cars()
+df.loc[:, "gear"].head(5)
 
 # %% [markdown]
 # Select one or more columns as a `pd.DataFrame`:
 
 # %%
-df = usd_exchange_rates_df()
-df.loc[:, ["Currency/USD"]]
+df = cars()
+df.loc[:, ["gear"]].head(5)
 
 # %% [markdown]
 # Modify a subpart of a dataframe:
 
 # %%
-df = usd_exchange_rates_df()
-df.loc[df["Currency"] == "EUR", "Currency/USD"] = 2
-df.loc[df["Currency"] == "GBP", "USD/Currency"] = 0.5
-df
+df = cars()
+df.loc[df["cyl"] == 6, "hp"] = 200
+df.loc[df["cyl"] == 6, :]
 
 # %% [markdown]
-# ### Select with loc[] and a multi-index
+# ### Boolean expressions in [] and loc[]
 
 # %% [markdown]
-# When using `loc[]` with multi-index both the row and column filter need to be passed as arguments:
+# When selecting rows with `df[df["gear"] == 5]`, `df["gear"] == 5` is a `pd.Series` wrapping a boolean vector:
 
 # %%
-df = usd_exchange_rates_df().set_index(["Currency", "Year"])
-df.loc[("EUR", pd.to_datetime("2017-12-31")), :]
+df = cars()
+(df["gear"] == 5).head(5)
 
 # %% [markdown]
-# The elements of the tuple can be lists or `slice()` objects:
+# Boolean operators like `&`, `|` and `~` (negation) can be used on those boolean vectors to represent compound filtering conditions. Individual conditions have to be enclosed in parenthesis since `&` and `|` have higher priority in Python than operators like `==`, `>=`, etc.:
 
 # %%
-df = usd_exchange_rates_df().set_index(["Currency", "Year"])
-df.loc[(["EUR", "GBP"], slice(pd.to_datetime("2017-12-31"), pd.to_datetime("2019-12-31"))), :]
-
-# %% [markdown]
-# To filter only on first N levels of the multi-index, simply omit the criteria for all remaining levels:
-
-# %%
-df = usd_exchange_rates_df().set_index(["Currency", "Year"])
-df.loc["EUR", :]
-
-# %% [markdown]
-# To filter only on middle or last N levels of the multi-index, use `slice(None)` to select everything at the upper levels (`slice(None)` is just the equivalent of `:`, which can not be used as an element in a tuple):
-
-# %%
-df = usd_exchange_rates_df().set_index(["Currency", "Year"])
-df.loc[(slice(None), pd.to_datetime("2017-12-31")), :]
-
-# %% [markdown]
-# ### Boolean masks for [] and loc[]
-
-# %% [markdown]
-# Boolean masks can be formed with `&`, `|` and `~` (negation) and passed to `[]` and to `loc[]`. Conditions have to be enclosed in parenthesis since `&` and `|` have higher priority in Python than operators like `>=`:
-
-# %%
-df = usd_exchange_rates_df()
-df[(df["Year"] >= pd.to_datetime("2018-12-31")) &
-   (df["Year"] <= pd.to_datetime("2020-12-31"))]
-
-# %% [markdown]
-# The condition inside `[]` translates to a boolean vector:
-
-# %%
-df = usd_exchange_rates_df()
-((df["Year"] >= pd.to_datetime("2018-12-31")) &
- (df["Year"] <= pd.to_datetime("2020-12-31")))
+df = cars()
+df[(df["cyl"] >= 4) & (df["cyl"] <= 6) & (df["gear"] == 3)]
 
 # %% [markdown]
 # Use `isin()` series method for subset selection:
 
 # %%
-df = usd_exchange_rates_df()
-df[df["Year"].isin([
-    pd.to_datetime("2018-12-31"),
-    pd.to_datetime("2019-12-31"),
-    pd.to_datetime("2020-12-31")
-])]
+df = cars()
+df[df["cyl"].isin([4, 6]) & (df["gear"] == 3)]
 
 # %% [markdown]
 # ## Grouping
 
 # %% [markdown]
-# ### Reduce directly using DataFrameGroupBy/SeriesGroupBy methods
+# ### Forming groups
 
 # %% [markdown]
-# `df.groupby()` returns a `DataFrameGroupBy` that supports calls like `mean()`, `std()`, `min()`, `max()`, etc.:
-
-# %%
-df = usd_exchange_rates_df()
-df.groupby("Currency")[["Currency/USD", "USD/Currency"]].mean()
+# ### Aggregating group data
 
 # %% [markdown]
-# You can compute a compound expression for each group without repeating the `groupby()` step by using `pipe()`:
+# #### Aggregate with specific provided aggregations
+
+# %% [markdown]
+# `df.groupby()` returns a `DataFrameGroupBy` that supports calls like `min()`, `max()`, `mean()`, `std()`, `var()`, `quantile()` etc.:
 
 # %%
-df = usd_exchange_rates_df()
+df = cars()
+df.groupby(["cyl", "gear"])["hp"].mean()
+
+# %% [markdown]
+# To count the number of items in each group use `.size()`:
+
+# %%
+df = cars()
+df.groupby(["cyl", "gear"]).size()
+
+# %% [markdown]
+# Note that confusingly to get the number of rows in the whole dataframe, you have to do `len(df)` or `len(df.index)` - in a dataframe `.size` is a field not a method and it holds the number of cells in the dataframe not the number of rows. For example, to group cars by the number of cylinders and number of gears and see what percentage of all cars have what setup you call `.size()` on the `DataFrameGroupBy` object returned by `groupby(["cyl", "gear"])`, divide by `len(df)` and multiply the result by `100.0`:
+
+# %%
+df = cars()
+(df.groupby(["cyl", "gear"]).size() / len(df)) * 100.0
+
+# %% [markdown]
+# To count the groups themselves use the `.ngroups` attribute:
+
+# %%
+df = cars()
+df.groupby(["cyl", "gear"]).ngroups
+
+# %% [markdown]
+# To compute a compound expression involving group level aggregates, for example to compute the range of values within each group (group max - group min), reference to the groupby object and reuse it:
+
+# %%
+df = cars()
+df_groupby = df.groupby(["cyl", "gear"])["hp"]
+df_groupby.max() - df_groupby.min()
+
+# %% [markdown]
+# `.pipe()` will accomplish the same thing in a way that can be placed in the middle of a method chain:
+
+# %%
 (
-    df.groupby("Currency")[["Currency/USD", "USD/Currency"]]
-    .pipe(lambda currency: currency.quantile(0.75) - currency.quantile(0.25))
+    cars()
+    .groupby(["cyl", "gear"])["hp"]
+    .pipe(lambda group: group.max() - group.min())
+    .mean()
 )
 
 # %% [markdown]
-# ### Reduce group-by-group series-by-series with agg()
+# #### Aggregate with generic aggregate() method (series-by-series)
 
 # %% [markdown]
-# `df.groupby().agg(func)` will call `func(series)` once for each series of every group.
+# `df.groupby().aggregate(func)` will call `func(series)` once for each series of every group.
 #
 # `func` should return a scalar.
 
 # %%
-df = usd_exchange_rates_df()
-df.groupby("Currency").agg(np.mean)
+df = cars()
+df.groupby("cyl")[["hp"]].aggregate("mean")
 
 # %% [markdown]
 # Multiple aggregations can be specified:
 
 # %%
-df = usd_exchange_rates_df()
-df.groupby("Currency")[["Currency/USD", "USD/Currency"]].agg([np.mean, np.var])
+df = cars()
+df.groupby("cyl")[["hp"]].aggregate(["size", "mean", "std"])
 
 # %% [markdown]
 # Use keyword arguments to rename the resulting columns:
 
 # %%
-df = usd_exchange_rates_df()
-df.groupby("Currency")[["Currency/USD", "USD/Currency"]].agg(
-    avg_cur2usd=("Currency/USD", np.mean),
-    avg_usd2cur=("USD/Currency", np.mean),
-)
+df = cars()
+df.groupby("cyl").aggregate(average=("hp", "mean"))
 
 # %% [markdown]
-# The last type of agg() aggregation has slightly different syntax when dealing with a single series:
+# The last type of aggregate() aggregation has slightly different syntax when dealing with a single series:
 
 # %%
-df = usd_exchange_rates_df()
-df.groupby("Currency")["Currency/USD"].agg(average=np.mean)
+df = cars()
+df.groupby("cyl")["hp"].agg(average=np.mean)
 
 # %% [markdown]
-# ### Transform rows one-by-one with transform()
+# #### Aggregate with generic apply() method (dataframe-by-dataframe)
+
+# %% [markdown]
+# `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group. The form of the result depends of the return type of `func`.
+
+# %% [markdown]
+# **Case 1:** `func` returns a scalar - the result of `apply(func)` is a series indexed by the group key:
+
+# %%
+df = cars()
+df.groupby("cyl")[["hp"]].apply(lambda df: np.mean(df.values))
+
+# %% [markdown]
+# **Case 2:** `func` returns a series - the result of `apply(func)` is a dataframe indexed by the group key, with columns given by the index of the returned series:
+
+# %%
+df = cars()
+df.groupby("cyl")[["hp", "mpg"]].apply(lambda df: df.mean())
+
+# %% [markdown]
+# **Case 3:** `func` returns a dataframe - the result of `apply(func)` is a dataframe with a multi-index and with same columns as the dataframe returned by `func`. The multi-index consists of a group key level concatenated with levels of the index of the dataframes returned by `func`:
+
+# %%
+df = cars()
+df.groupby("cyl").apply(lambda df: df.drop(columns=["Currency"]).set_index(["Year"]).rolling(3).mean().dropna())
+
+# %% [markdown]
+# ### Transforming group data
+
+# %% [markdown]
+# In Pandas terminology, transformations differ from aggregations in that the result of a transformation has dimensions equal to the dimensions of the original series or dataframe before the `.groupby()`. Common use case is to do something with each row of a dataframe but using some data computed in the context of the group of given row, like the group mean of some attribute.
+
+# %% [markdown]
+# #### Transform with specific provided transformations
+
+# %% [markdown]
+# #### Transform rows one-by-one with generic transform() method
 
 # %% [markdown]
 # `df.groupby().transform(func)` will call `func(series_in_group)` once for each series in each group. In contrast to `apply()`, the result of `transform()` is of the same dimensions as the original dataframe.
@@ -339,67 +501,3 @@ df.groupby("Currency")["Currency/USD"].agg(average=np.mean)
 # %%
 df = usd_exchange_rates_df()
 df.groupby("Currency")[["Currency/USD", "USD/Currency"]].transform(lambda df: df.mean())
-
-# %% [markdown]
-# ### Reduce group-by-group with apply()
-
-# %% [markdown]
-# `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group. The form of the result depends of the return type of `func`.
-
-# %% [markdown]
-# **Case 1:** `func` returns a scalar - the result of `apply(func)` is a series indexed by the group key:
-
-# %%
-df.groupby("Currency")[["Currency/USD"]].apply(lambda df: np.mean(df.values))
-
-# %% [markdown]
-# **Case 2:** `func` returns a series - the result of `apply(func)` is a dataframe indexed by the group key, with columns given by the index of the returned series:
-
-# %%
-df = usd_exchange_rates_df()
-df.groupby("Currency")[["Currency/USD", "USD/Currency"]].apply(lambda df: df.mean())
-
-# %% [markdown]
-# **Case 3:** `func` returns a dataframe - the result of `apply(func)` is a dataframe with a multi-index and with same columns as the dataframe returned by `func`. The multi-index consists of a group key level concatenated with levels of the index of the dataframes returned by `func`:
-
-# %%
-df = usd_exchange_rates_df()
-df.groupby("Currency").apply(lambda df: df.drop(columns=["Currency"]).set_index(["Year"]).rolling(3).mean().dropna())
-
-# %% [markdown]
-# ## Pivoting and unpivoting
-
-# %% [markdown]
-# The USD exchange rates dataframe is neither in fully long format nor in fully wide format: there is one row per each year+currency pair, but there are two different "observations" stored in two columns: "Currency/USD" and "USD/Currency".
-#
-# Thus the dataframe can be both:
-# - pivoted (widened) so that each currency becomes a separate column
-# - unpivoted (lengthened) so that each row is split into two and there is a "Direction" column equal to either "Currency/USD" or "USD/Currency" and a value column with the actual rate
-
-# %% [markdown]
-# ### Pivot with multi-index and unstack()
-
-# %%
-df = usd_exchange_rates_df().set_index(["Currency", "Year"])
-df.unstack(level=0)
-
-# %% [markdown]
-# ### Unpivot with multi-index and stack()
-
-# %%
-df = usd_exchange_rates_df().set_index(["Currency", "Year"])
-df.stack().rename_axis(index={None: "Direction"})
-
-# %% [markdown]
-# ### Pivot with pivot()
-
-# %%
-df = usd_exchange_rates_df()
-df.pivot(index=["Year"], columns=["Currency"], values=["Currency/USD", "USD/Currency"])
-
-# %% [markdown]
-# ### Unpivot with melt()
-
-# %%
-df = usd_exchange_rates_df()
-df.melt(id_vars=["Year", "Currency"], var_name="Direction", value_name="Value")
