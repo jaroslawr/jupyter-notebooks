@@ -17,11 +17,11 @@
 # # Data analysis with Pandas
 
 # %% [markdown]
-# This is a guide to doing data analysis with Pandas written with a particular goal: to help understand the most important concepts and usage patterns in a way that sticks with you, as opposed to covering every possible application. We try to achieve this by laying out and following some specific principles:
+# This is a guide to doing data analysis with Pandas written to help understand the most important concepts and usage patterns in a way that sticks with you. We try to make things understandable and memorable by adhering to some principles:
 #
-# - Build deep understanding of general concepts:
+# - Identify and explore important general concepts:
 #     - the basic Panas data structures: series, dataframes and indexes
-#     - wide classes of operations on data: selection, grouping, aggregations and transformations
+#     - wide classes of operations on data: selection, grouping, aggregations and transformations, sorting
 #     - shapes that datasets come in and how to convert between them: long vs wide
 # - Use well chosen examples:
 #     - preferrably real datasets
@@ -77,11 +77,11 @@ primes = pd.Series([2, 3, 5, 7, 11])
 primes.index
 
 # %% [markdown]
-# `.loc[]` call for a series takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic array indexing:
+# `.loc[]` call for a series takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic array indexing (though it does not support negative indexing, since all it does is label lookup):
 
 # %%
 primes = pd.Series([2, 3, 5, 7, 11])
-primes.loc[0]
+primes.loc[2]
 
 # %% [markdown]
 # The index is what makes a series something more than a simple array. It makes it possible to refer to the values in the series by whatever label is appropriate: by a string, by a date, by a pair of numbers, ... It also plays a role similar to a database index, hence the name: it speeds up operations like joins that have to lookup by this label repeatedly. Here is how you construct a series with an explicit index that does not simply use position in the series as the label of each value:
@@ -91,26 +91,15 @@ primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
 primes
 
 # %% [markdown]
-# Now you can lookup by label:
+# Now you can lookup values by label or a set of labels:
 
 # %%
 primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
 primes.loc["p0"]
 
-# %% [markdown]
-# Lookup by index is nevertheless always possible using `.iloc[]`:
-
 # %%
 primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
-primes.iloc[2]
-
-# %% [markdown]
-# You can explicitly construct a `pd.Index` instance and pass it in the `pd.Series` constructor:
-
-# %%
-index = pd.Index(["p0", "p1", "p2", "p3", "p4"])
-series = pd.Series([2, 3, 5, 7, 11], index=index)
-series
+primes.loc[["p0", "p2"]]
 
 # %% [markdown]
 # ### Data frames
@@ -119,11 +108,11 @@ series
 # Conceptually a dataframe is a collection of column series that share a common row index:
 
 # %%
-df = pd.DataFrame({"a": series, "b": series})
+df = pd.DataFrame({"a": primes, "b": primes})
 df
 
 # %%
-df = pd.DataFrame({"a": series, "b": series})
+df = pd.DataFrame({"a": primes, "b": primes})
 display(id(df.index))
 display(id(df["a"].index))
 display(id(df["b"].index))
@@ -132,18 +121,18 @@ display(id(df["b"].index))
 # Columns get labels through an additional index object, called the column index:
 
 # %%
-df = pd.DataFrame({"a": series, "b": series})
+df = pd.DataFrame({"a": primes, "b": primes})
 df.columns
 
 # %% [markdown]
 # Many Pandas methods work with either the row index or column index depending on the value of the `axis` keyword argument. For example removing rows by label and removing columns using a label or a set of labels are both done using the `drop` method:
 
 # %%
-df = pd.DataFrame({"a": series, "b": series})
+df = pd.DataFrame({"a": primes, "b": primes})
 df.drop(["p0", "p1"])
 
 # %%
-df = pd.DataFrame({"a": series, "b": series})
+df = pd.DataFrame({"a": primes, "b": primes})
 df.drop("a", axis=1)
 
 # %% [markdown]
@@ -188,7 +177,7 @@ def cars():
 
 
 # %% [markdown]
-# ## Examining datasets
+# ## Inspection of dataframes and series
 
 # %% [markdown]
 # `.head(n)` returns the first `n` rows, `.tail(n)` the last `n` rows, and `.sample(n)` random `n` rows:
@@ -198,6 +187,13 @@ df = cars()
 display(df.head(2))
 display(df.tail(2))
 display(df.sample(2))
+
+# %% [markdown]
+# `info()` prints a summary description of a dataframe that contains a lot of useful information: number of entries in the index (which is equal to the total number of rows), a list of columns along with the datatype of the column and the number of non-null values and overall memory usage of the dataframe. The downside is that all this information is simply printed and nothing is returned:
+
+# %%
+df = cars()
+df.info()
 
 # %% [markdown]
 # `len(df)` returns the number of rows in a dataframe:
@@ -214,7 +210,14 @@ df = cars()
 df.count()
 
 # %% [markdown]
-# Describe will also show the number of non-null rows for given column, but along with basic summary statistics:
+# `df.dtypes` returns a series indexed by column name that contains the dtype of each column of `df`:
+
+# %%
+df = cars()
+df.dtypes
+
+# %% [markdown]
+# `describe()` returns a dataframe that basic summary statistics and the number of non-null rows for each column:
 
 # %%
 df = cars()
@@ -247,10 +250,25 @@ df["cyl"].unique()
 df["cyl"].nunique()
 
 # %% [markdown]
-# ## Selecting rows and columns
+# `nlargest(n)` returns `n` largest values and `nsmallest(n)` `n` smallest (`n` defaults to 5):
+
+# %%
+df["hp"].nlargest()
+
+# %%
+df["hp"].nsmallest()
 
 # %% [markdown]
-# ### Select with []
+# To see the cars with largest horse power, use the fact that the index of the series returned by `nlargest` is a subset of the dataframe index and hence can be used to subset the dataframe:
+
+# %%
+df.loc[df["hp"].nlargest().index]
+
+# %% [markdown]
+# ## Selection of rows and columns
+
+# %% [markdown]
+# ### Selection with []
 
 # %% [markdown]
 # Select rows with `[]`:
@@ -274,7 +292,7 @@ df = cars()
 df["gear"].head(5)
 
 # %% [markdown]
-# Select one or more columns as a `pd.DataFrame` by passing a list to `[]`:
+# Select one or more columns as a `pd.DataFrame` by passing a list to `[]` - note how a dataframe with one column is of different type than a series:
 
 # %%
 df = cars()
@@ -288,19 +306,19 @@ df = cars()
 df[df["gear"] == 5]["cyl"]
 
 # %% [markdown]
-# Note that chaining `[]` does not work for the purpose of modifying or inserting data:
+# This form of row and column selection does not work for the purpose of modifying or inserting data:
 
 # %%
 df = cars()
 df[df["gear"] == 5]["cyl"] = 3
 
 # %% [markdown]
-# `df[][]=` translates to a `df.__getitem__()` call on the data frame and then a `.__setitem__()` call on the resulting object. The problem is that the `df.__getitem__()` call might return either a view or a copy of the dataframe, so the dataframe might or might not be modified.
+# Lets breakdown how the `df[df["gear"] == 5]["cyl"] = 3` expression translates to method calls on the underlying objects: `df[df["gear"] == 5]` translates to a `df.__getitem__(df["gear"] == 5)` call on the data frame and then the `["cyl"] = 3` part to a `.__setitem__(3)` call on the resulting object. The problem is that the `__getitem__` call might return either a view or a copy of the dataframe, so the original dataframe might or might not be modified.
 #
-# Instead, `df.loc[]` can be used to select rows and columns at the same time. `df.loc[]` will return a view or a copy just like `df[]`, but `df.loc[]=` is just a single method call on the `loc` attribute of the original dataframe, free of the ambiguity of `[][]=`, so that it will always correctly modify the dataframe.
+# Instead, `df.loc[]` can be used to select rows and columns at the same time. `df.loc[]` will return a view or a copy just like `df[]`, but `df.loc[]=` is just a single `__setitem__` method call on the object stored in the `loc` attribute of the original dataframe, free of the ambiguity of `[][]=`, so that it will always correctly modify the dataframe.
 
 # %% [markdown]
-# ### Select with loc[]
+# ### Selection with loc[]
 
 # %% [markdown]
 # Select rows:
@@ -363,33 +381,48 @@ df = cars()
 df[df["cyl"].isin([4, 6]) & (df["gear"] == 3)]
 
 # %% [markdown]
-# ## Grouping
+# ### Selection with iloc[]
+
+# %% [markdown]
+# `iloc[]` returns rows and columns specified using array-like indexes (positive or negative offset of the row in the series or of the rows and optionally columns of the data frame):
+
+# %%
+primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
+primes.iloc[2]
+
+# %%
+primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
+primes.iloc[-2]
+
+# %%
+primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
+primes.iloc[1:3]
+
+# %% [markdown]
+# ## Groups
 
 # %% [markdown]
 # ### Forming groups
 
 # %% [markdown]
-# ### Aggregating group data
+# ### Aggregation using predefined methods
 
 # %% [markdown]
-# #### Aggregate with specific provided aggregations
-
-# %% [markdown]
-# `df.groupby()` returns a `DataFrameGroupBy` that supports calls like `min()`, `max()`, `mean()`, `std()`, `var()`, `quantile()` etc.:
+# The series groupby and dataframe groupby objects both support calls like `min()`, `max()`, `mean()`, `std()`, `var()`, `quantile()` etc. that are groupwise versions of the respective series/dataframe operation:
 
 # %%
 df = cars()
 df.groupby(["cyl", "gear"])["hp"].mean()
 
 # %% [markdown]
-# To count the number of items in each group use `.size()`:
+# To count the number of items in each group call `.size()` on the groupby object:
 
 # %%
 df = cars()
 df.groupby(["cyl", "gear"]).size()
 
 # %% [markdown]
-# Note that confusingly to get the number of rows in the whole dataframe, you have to do `len(df)` or `len(df.index)` - in a dataframe `.size` is a field not a method and it holds the number of cells in the dataframe not the number of rows. For example, to group cars by the number of cylinders and number of gears and see what percentage of all cars have what setup you call `.size()` on the `DataFrameGroupBy` object returned by `groupby(["cyl", "gear"])`, divide by `len(df)` and multiply the result by `100.0`:
+# Confusingly, in a dataframe `.size` is a field not a method and it holds the number of cells in the dataframe not the number of rows. To get the number of rows in the whole dataframe, you have to call `len(df)` or `len(df.index)`. For example, to group cars by the number of cylinders and number of gears and see what percentage of all cars have what setup you call `.size()` on the groupby object returned by `groupby(["cyl", "gear"])`, divide by `len(df)` and multiply the result of the division by `100.0`:
 
 # %%
 df = cars()
@@ -403,7 +436,7 @@ df = cars()
 df.groupby(["cyl", "gear"]).ngroups
 
 # %% [markdown]
-# To compute a compound expression involving group level aggregates, for example to compute the range of values within each group (group max - group min), reference to the groupby object and reuse it:
+# To compute a compound expression involving group level aggregates, for example the range of values within each group (group max - group min), reference to the groupby object and reuse it:
 
 # %%
 df = cars()
@@ -422,82 +455,70 @@ df_groupby.max() - df_groupby.min()
 )
 
 # %% [markdown]
-# #### Aggregate with generic aggregate() method (series-by-series)
+# ### Aggregation using generic agg()
 
 # %% [markdown]
-# `df.groupby().aggregate(func)` will call `func(series)` once for each series of every group.
-#
-# `func` should return a scalar.
+# `agg(func)` calls `func(series)` once for each `series` of every group. `func` should return a scalar. `func` can be passed in as a function or a function name (a string). The result is a series or a dataframe depending whether aggregation is done on a single series or on a dataframe but also whether one aggregation is done or more. There are also multiple ways of providing arguments specifying the aggregations to do. Hence there are many cases which we now try to showcase.
+
+# %% [markdown]
+# #### Aggregation of a single series
+
+# %% [markdown]
+# Simplest case is doing a single aggregation on a single series. The result is a series:
 
 # %%
 df = cars()
-df.groupby("cyl")[["hp"]].aggregate("mean")
+df.groupby("cyl")["hp"].agg("mean")
 
 # %% [markdown]
-# Multiple aggregations can be specified:
+# To do multiple aggregations pass a list of functions or function names to `agg`. The result will be a dataframe, since in general there is more than one group each of which becomes a row of the result and for each group we compute more than one aggregation each of which becomes a column of the result:
 
 # %%
 df = cars()
-df.groupby("cyl")[["hp"]].aggregate(["size", "mean", "std"])
+df.groupby("cyl")["hp"].agg(["size", "mean", "std"])
 
 # %% [markdown]
-# Use keyword arguments to rename the resulting columns:
+# `agg()` can also be called with keyword arguments, in which case the name of the argument specifies the name of the column for the aggregated data in the resulting dataframe. The value of each keyword argument should again be a function or a function name to perform the aggregation:
 
 # %%
 df = cars()
-df.groupby("cyl").aggregate(average=("hp", "mean"))
+df.groupby("cyl")["hp"].agg(count="size", average="mean", stddev="std")
 
 # %% [markdown]
-# The last type of aggregate() aggregation has slightly different syntax when dealing with a single series:
+# #### Aggregation of a dataframe
+
+# %% [markdown]
+# Next case is aggregation of multiple series. When a single aggregation is applied, the result is a simple dataframe whose column names are the same as the columns that were aggregated:
 
 # %%
 df = cars()
-df.groupby("cyl")["hp"].agg(average=np.mean)
+df.groupby("cyl")[["hp", "wt"]].agg("mean")
 
 # %% [markdown]
-# #### Aggregate with generic apply() method (dataframe-by-dataframe)
-
-# %% [markdown]
-# `df.groupby().apply(func)` will call `func(group)` once for each group, where `group` is a dataframe containing the rows within each group. The form of the result depends of the return type of `func`.
-
-# %% [markdown]
-# **Case 1:** `func` returns a scalar - the result of `apply(func)` is a series indexed by the group key:
+# When multiple aggregations are applied to a dataframe, the result is a dataframe with a column multi-index:
 
 # %%
 df = cars()
-df.groupby("cyl")[["hp"]].apply(lambda df: np.mean(df.values))
+df.groupby("cyl")[["hp", "wt"]].agg(["mean", "std"])
 
 # %% [markdown]
-# **Case 2:** `func` returns a series - the result of `apply(func)` is a dataframe indexed by the group key, with columns given by the index of the returned series:
+# You can avoid the column multi-index by using the keyword arguments to `agg()`. The name of the keyword argument again specifies the name of the aggregated series in the resulting dataframe, but values of the keyword arguments now have to be tuples of the form `(name_of_column_to_aggregate,aggregation)` where `aggregation` is as always a function or function name:
 
 # %%
 df = cars()
-df.groupby("cyl")[["hp", "mpg"]].apply(lambda df: df.mean())
+df.groupby("cyl")[["hp", "wt"]].agg(
+    hp_mean=("hp", "mean"),
+    hp_std=("hp", "std"),
+    wt_mean=("wt", "mean"),
+    wt_std=("wt", "std"),
+)
 
 # %% [markdown]
-# **Case 3:** `func` returns a dataframe - the result of `apply(func)` is a dataframe with a multi-index and with same columns as the dataframe returned by `func`. The multi-index consists of a group key level concatenated with levels of the index of the dataframes returned by `func`:
+# Finally when aggregating a dataframe there is yet another way of specifying arguments for `agg`: to do different aggregations for different columns you can pass a dict as an argument. The result will be a dataframe and if any columns is aggregated using more than one function, it will have a column multi-index:
 
 # %%
 df = cars()
-df.groupby("cyl").apply(lambda df: df.drop(columns=["Currency"]).set_index(["Year"]).rolling(3).mean().dropna())
-
-# %% [markdown]
-# ### Transforming group data
-
-# %% [markdown]
-# In Pandas terminology, transformations differ from aggregations in that the result of a transformation has dimensions equal to the dimensions of the original series or dataframe before the `.groupby()`. Common use case is to do something with each row of a dataframe but using some data computed in the context of the group of given row, like the group mean of some attribute.
-
-# %% [markdown]
-# #### Transform with specific provided transformations
-
-# %% [markdown]
-# #### Transform rows one-by-one with generic transform() method
-
-# %% [markdown]
-# `df.groupby().transform(func)` will call `func(series_in_group)` once for each series in each group. In contrast to `apply()`, the result of `transform()` is of the same dimensions as the original dataframe.
-#
-# `func(series_in_group)` should either return a series of the same dimensions as `series_in_group` or a scalar, in which case pandas will take care of making a series of length `len(series_in_group)` out of it.
-
-# %%
-df = usd_exchange_rates_df()
-df.groupby("Currency")[["Currency/USD", "USD/Currency"]].transform(lambda df: df.mean())
+df.groupby("cyl")[["hp", "wt"]].agg({
+    "hp": ["mean", "std"],
+    "wt": "mean"
+})
