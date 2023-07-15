@@ -17,10 +17,10 @@
 # # Data analysis with Pandas
 
 # %% [markdown]
-# This is a guide to doing data analysis with Pandas written to help understand the most important concepts and usage patterns in a way that sticks with you. We try to make things understandable and memorable by adhering to some principles:
+# This is a guide to doing data analysis with Pandas written to help understand the most important concepts and usage patterns in a way that sticks with you. I try to make things understandable and memorable by adhering to some principles:
 #
 # - Identify and explore important general concepts:
-#     - the basic Panas data structures: series, dataframes and indexes
+#     - the basic Pandas data structures: series, dataframes, indexes and multi-indexes
 #     - wide classes of operations on data: selection, grouping, aggregations and transformations, sorting
 #     - shapes that datasets come in and how to convert between them: long vs wide
 # - Use well chosen examples:
@@ -77,14 +77,14 @@ primes = pd.Series([2, 3, 5, 7, 11])
 primes.index
 
 # %% [markdown]
-# `.loc[]` call for a series takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic array indexing (though it does not support negative indexing, since all it does is label lookup):
+# `.loc[]` call for a series takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic array indexing (though it does not support negative indexing, since it does label lookup):
 
 # %%
 primes = pd.Series([2, 3, 5, 7, 11])
 primes.loc[2]
 
 # %% [markdown]
-# The index is what makes a series something more than a simple array. It makes it possible to refer to the values in the series by whatever label is appropriate: by a string, by a date, by a pair of numbers, ... It also plays a role similar to a database index, hence the name: it speeds up operations like joins that have to lookup by this label repeatedly. Here is how you construct a series with an explicit index that does not simply use position in the series as the label of each value:
+# The index is what makes a series something more than a simple array. It makes it possible to refer to the values in the series by whatever label is appropriate: by a string, by a date, by a pair of numbers, ... It also plays a role similar to a database index, hence the name: it speeds up operations like joins that have to lookup by label repeatedly. Here is how you construct a series with an explicit index that does not simply use position in the series as the label of each value:
 
 # %%
 primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
@@ -166,7 +166,7 @@ series.to_frame()
 # ## Dataset: mtcars
 
 # %% [markdown]
-# We will use the mtcars dataset as the default basic example in the following sections. Its contents are easy to understand and fairly interesting, while it also is provided in one of the simplest and most commonly encountered ways: each row describes a single unique unit of observation (a car) and each column is a different measurement for the same unit of observation (miles/gallon, number of cylinders, horsepower etc.):
+# We will use the mtcars dataset as the default basic example in the following sections. Its contents are easy to understand and interesting and also it is provided in a common simple form: each row describes a single unique unit of observation (a car) and each column is a different measurement for the same unit of observation (miles/gallon, number of cylinders, horsepower etc.):
 
 # %%
 CARS = pd.read_csv("mtcars.csv")
@@ -177,7 +177,7 @@ def cars():
 
 
 # %% [markdown]
-# ## Inspection of dataframes and series
+# ## Exploring datasets
 
 # %% [markdown]
 # `.head(n)` returns the first `n` rows, `.tail(n)` the last `n` rows, and `.sample(n)` random `n` rows:
@@ -265,10 +265,10 @@ df["hp"].nsmallest()
 df.loc[df["hp"].nlargest().index]
 
 # %% [markdown]
-# ## Selection of rows and columns
+# ## Selecting rows and columns
 
 # %% [markdown]
-# ### Selection with []
+# ### Selecting with []
 
 # %% [markdown]
 # Select rows with `[]`:
@@ -278,13 +278,6 @@ df = cars()
 df[df["gear"] == 5]
 
 # %% [markdown]
-# `[]` will accept a callable as argument for cases where a reference to the dataframe is not available, for example when chaining method calls on the dataframe:
-
-# %%
-df = cars()
-df[lambda df: df["gear"] == 5][lambda df: df["cyl"] == 4]
-
-# %% [markdown]
 # Select a single column as a `pd.Series` with `[]`:
 
 # %%
@@ -292,7 +285,7 @@ df = cars()
 df["gear"].head(5)
 
 # %% [markdown]
-# Select one or more columns as a `pd.DataFrame` by passing a list to `[]` - note how a dataframe with one column is of different type than a series:
+# Select one or more columns as a `pd.DataFrame` by passing a list to `[]` - note how a dataframe with one column is of different type than a series and is displayed in a different way:
 
 # %%
 df = cars()
@@ -318,7 +311,7 @@ df[df["gear"] == 5]["cyl"] = 3
 # Instead, `df.loc[]` can be used to select rows and columns at the same time. `df.loc[]` will return a view or a copy just like `df[]`, but `df.loc[]=` is just a single `__setitem__` method call on the object stored in the `loc` attribute of the original dataframe, free of the ambiguity of `[][]=`, so that it will always correctly modify the dataframe.
 
 # %% [markdown]
-# ### Selection with loc[]
+# ### Selecting with loc[]
 
 # %% [markdown]
 # Select rows:
@@ -326,13 +319,6 @@ df[df["gear"] == 5]["cyl"] = 3
 # %%
 df = cars()
 df.loc[df["gear"] == 5]
-
-# %% [markdown]
-# `loc[]` will accept a callable as argument for cases where a reference to the dataframe is not available, for example when chaining method calls on the dataframe:
-
-# %%
-df = cars()
-df.loc[lambda df: df["gear"] == 5].loc[lambda df: df["cyl"] == 4]
 
 # %% [markdown]
 # Select a single column as a `pd.Series`:
@@ -381,31 +367,33 @@ df = cars()
 df[df["cyl"].isin([4, 6]) & (df["gear"] == 3)]
 
 # %% [markdown]
-# ### Selection with iloc[]
+# ### Selecting with iloc[]
 
 # %% [markdown]
 # `iloc[]` returns rows and columns specified using array-like indexes (positive or negative offset of the row in the series or of the rows and optionally columns of the data frame):
 
 # %%
-primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
-primes.iloc[2]
+df = cars()
+df.iloc[2]
 
 # %%
-primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
-primes.iloc[-2]
+df = cars()
+df.iloc[-2]
 
 # %%
-primes = pd.Series([2, 3, 5, 7, 11], index=["p0", "p1", "p2", "p3", "p4"])
-primes.iloc[1:3]
+df = cars()
+df.iloc[0:3]
 
 # %% [markdown]
-# ## Groups
+# ## Grouping
 
 # %% [markdown]
-# ### Forming groups
+# ### Splitting into groups
+
+# %%
 
 # %% [markdown]
-# ### Aggregation using predefined methods
+# ### Aggregating using predefined methods
 
 # %% [markdown]
 # The series groupby and dataframe groupby objects both support calls like `min()`, `max()`, `mean()`, `std()`, `var()`, `quantile()` etc. that are groupwise versions of the respective series/dataframe operation:
@@ -415,14 +403,14 @@ df = cars()
 df.groupby(["cyl", "gear"])["hp"].mean()
 
 # %% [markdown]
-# To count the number of items in each group call `.size()` on the groupby object:
+# To count the number of rows in each group call `.size()` on the groupby object:
 
 # %%
 df = cars()
 df.groupby(["cyl", "gear"]).size()
 
 # %% [markdown]
-# Confusingly, in a dataframe `.size` is a field not a method and it holds the number of cells in the dataframe not the number of rows. To get the number of rows in the whole dataframe, you have to call `len(df)` or `len(df.index)`. For example, to group cars by the number of cylinders and number of gears and see what percentage of all cars have what setup you call `.size()` on the groupby object returned by `groupby(["cyl", "gear"])`, divide by `len(df)` and multiply the result of the division by `100.0`:
+# Confusingly, to get the number of rows in the whole dataframe, you need to call `len(df)` or `len(df.index)` - `.size` in a dataframe is a field not a method and it holds the number of cells in the dataframe not the number of rows. For example, to group cars by the number of cylinders and number of gears and see what percentage of all cars have what setup you call `.size()` on the groupby object returned by `groupby(["cyl", "gear"])`, divide by `len(df)` and multiply the result of the division by `100.0`:
 
 # %%
 df = cars()
@@ -444,24 +432,13 @@ df_groupby = df.groupby(["cyl", "gear"])["hp"]
 df_groupby.max() - df_groupby.min()
 
 # %% [markdown]
-# `.pipe()` will accomplish the same thing in a way that can be placed in the middle of a method chain:
-
-# %%
-(
-    cars()
-    .groupby(["cyl", "gear"])["hp"]
-    .pipe(lambda group: group.max() - group.min())
-    .mean()
-)
-
-# %% [markdown]
-# ### Aggregation using generic agg()
+# ### Aggregating using generic agg()
 
 # %% [markdown]
 # `agg(func)` calls `func(series)` once for each `series` of every group. `func` should return a scalar. `func` can be passed in as a function or a function name (a string). The result is a series or a dataframe depending whether aggregation is done on a single series or on a dataframe but also whether one aggregation is done or more. There are also multiple ways of providing arguments specifying the aggregations to do. Hence there are many cases which we now try to showcase.
 
 # %% [markdown]
-# #### Aggregation of a single series
+# #### Aggregating a single series
 
 # %% [markdown]
 # Simplest case is doing a single aggregation on a single series. The result is a series:
@@ -485,7 +462,7 @@ df = cars()
 df.groupby("cyl")["hp"].agg(count="size", average="mean", stddev="std")
 
 # %% [markdown]
-# #### Aggregation of a dataframe
+# #### Aggregating a dataframe
 
 # %% [markdown]
 # Next case is aggregation of multiple series. When a single aggregation is applied, the result is a simple dataframe whose column names are the same as the columns that were aggregated:
