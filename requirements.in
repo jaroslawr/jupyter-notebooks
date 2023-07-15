@@ -1,0 +1,8 @@
+jupyterlab
+jupytext
+numpy
+pandas
+scipy
+matplotlib
+seaborn
+pycountry
