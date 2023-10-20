@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.4
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -290,19 +290,19 @@ df.groupby("cyl")
 # %% [markdown]
 # This `DataframeGroupBy` object is the starting point from which various groupwise operations can be done:
 
-# %% tags=[]
+# %%
 df.groupby("cyl").mean(numeric_only=True)
 
 # %% [markdown]
 # You can also select a single series from the dataframe groupby object which results in a `SeriesGroupBy` object:
 
-# %% tags=[]
+# %%
 df.groupby("cyl")["mpg"]
 
 # %% [markdown]
 # Aggregations then produce a single value per group and result in a `pd.Series`:
 
-# %% tags=[]
+# %%
 df.groupby("cyl")["mpg"].mean()
 
 # %% [markdown]

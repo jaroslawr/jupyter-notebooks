@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.4
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -24,7 +24,7 @@
 # https://matplotlib.org/stable/api/figure_api.html  
 # https://matplotlib.org/stable/api/axes_api.html
 
-# %% [markdown] tags=[]
+# %% [markdown]
 # ## Setup
 
 # %% [markdown]
@@ -165,14 +165,14 @@ def plot_boxplot():
     ax.boxplot([n1, n2, n3], labels=["N(-1.0, 1.0)", "N(0.0, 1.0)", "N(1.0, 1.0)"])
 
 
-# %% tags=[]
+# %%
 plot_boxplot()
 
 
 # %% [markdown]
 # ## Scatter plots
 
-# %% tags=[]
+# %%
 def scatterplot():
     x = np.random.normal(0, 1, size=200)
     y = np.random.normal(0, 1, size=200)
@@ -182,5 +182,5 @@ def scatterplot():
     ax.scatter(x, y, alpha=0.5)
 
 
-# %% tags=[]
+# %%
 scatterplot()

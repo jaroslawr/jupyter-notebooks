@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.4
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -16,7 +16,7 @@
 # %% [markdown]
 # # Data analysis: Dow Jones stock prices over time
 
-# %% [markdown] tags=[]
+# %% [markdown]
 # Data analysis of Dow Jones stock prices dataset from:
 #
 # http://archive.ics.uci.edu/ml/datasets/Dow+Jones+Index
@@ -77,7 +77,7 @@ def parse_dollar_price(dollar_price):
     return np.float64(dollar_price[1:]) if dollar_price[0] == '$' else np.NaN
 
 dollars_cols = ["open", "high", "low", "close", "next_weeks_open", "next_weeks_close"]
-df[dollars_cols] = df[dollars_cols].applymap(parse_dollar_price)
+df[dollars_cols] = df[dollars_cols].map(parse_dollar_price)
 
 # %%
 df.head(5)
@@ -104,7 +104,7 @@ def plot(w, h):
 
 plot(16, 8)
 
-# %% tags=[]
+# %%
 df[["stock", "close"]].groupby("stock").agg(
     p1=("close", lambda s: s.quantile(0.01)),
     p5=("close", lambda s: s.quantile(0.05)),

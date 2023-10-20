@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.4
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -95,5 +95,5 @@ sns.displot(data=df, x="sepal_length", hue="class", kind="kde", height=4, aspect
 # %% [markdown]
 # ### Box plot
 
-# %% tags=[]
+# %%
 sns.catplot(data=df, x="sepal_length", y="class", kind="box", height=4, aspect=2)
