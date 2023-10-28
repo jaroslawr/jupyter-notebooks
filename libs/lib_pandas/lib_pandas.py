@@ -348,24 +348,31 @@ df_groupby.max() - df_groupby.min()
 # ### Aggregating using generic agg()
 
 # %% [markdown]
-# `agg(func)` calls `func(series)` once for each `series` of every group. `func` should return a scalar. `func` can be passed in as a function or a function name (a string). The result is a series or a dataframe depending whether aggregation is done on a single series or on a dataframe but also whether one aggregation is done or many. There are also multiple ways of providing arguments specifying the aggregations to do. Hence there are many cases which we now try to outline.
+# `agg(func)` calls `func(series)` once for each `series` of every group. `func` can be a function name, a function or a lambda expression and it should return a scalar value. The result of `agg` is a series or a dataframe depending whether aggregation is done on a single series or on a dataframe but also whether one aggregation is done or many. There are also multiple ways of providing arguments specifying the aggregations to do. Hence there are many cases which we now try to outline.
 
 # %% [markdown]
 # #### Aggregating a single series
 
 # %% [markdown]
-# Simplest case is doing a single aggregation on a single series. The result is a series:
+# The simplest aggregation is done on a single series and results in a series:
 
 # %%
 df = cars()
 df.groupby("cyl")["hp"].agg("mean")
 
 # %% [markdown]
-# To do multiple aggregations pass a list of functions or function names to `agg`. The result will be a dataframe, since in general there is more than one group each of which becomes a row of the result and for each group we compute more than one aggregation each of which becomes a column of the result:
+# When you pass a list as the argument to `agg` the result will be a dataframe, since then in general there can be more than one group and more than one aggregation - the groups become rows and the aggregations become columns of the result:
 
 # %%
 df = cars()
 df.groupby("cyl")["hp"].agg(["size", "mean", "std"])
+
+# %% [markdown]
+# This might be useful also with only one aggregation in the list, just to force the aggregation result to be a dataframe:
+
+# %%
+df = cars()
+df.groupby("cyl")["hp"].agg(["mean"])
 
 # %% [markdown]
 # `agg()` can also be called with keyword arguments, in which case the name of the argument specifies the name of the column for the aggregated data in the resulting dataframe. The value of each keyword argument should again be a function or a function name to perform the aggregation:
