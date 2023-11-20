@@ -110,14 +110,14 @@ points = points_top5()
 points.loc["Jayson Tatum"]
 
 # %% [markdown]
-# Working with Pandas it is important to be mindful of the dimensionality of the results. The example above returned a scalar, but if you pass the single player name enclosed in an array you will get a series with one entry as a result:
+# When using Pandas it is very important to be mindful of the dimensionality of the data structures. The example above returned a scalar, it is also possible to get the data for a single player as a series by passing the name enclosed in an array:
 
 # %%
 points = points_top5()
 points.loc[["Jayson Tatum"]]
 
 # %% [markdown]
-# This variant makes it possible to select multiple players:
+# Selecting multiple data points is also done by passing in an array of labels and results in a series as it must:
 
 # %%
 points = points_top5()
@@ -125,6 +125,14 @@ points.loc[["Jayson Tatum", "Luka Dončić"]]
 
 # %% [markdown]
 # Selection using the position of the data point in the series is always possible with `iloc[]`, regardless of what the index is:
+
+# %%
+points = points_top5()
+points.iloc[0]
+
+# %%
+points = points_top5()
+points.iloc[[0]]
 
 # %%
 points = points_top5()
