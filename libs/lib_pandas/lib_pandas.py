@@ -20,7 +20,7 @@
 # This is a guide to doing data analysis with Pandas written to help understand the most important concepts and usage patterns in a way that sticks with you. I try to make things understandable and memorable by adhering to some principles:
 #
 # - Identify and explore important general concepts:
-#     - the basic Pandas data structures: series, dataframes, indexes and multi-indexes
+#     - the Pandas data model: series, dataframes, indexes and multi-indexes
 #     - wide classes of operations on data: selection, grouping, aggregations and transformations, sorting
 #     - shapes that datasets come in and how to convert between them: long vs wide
 # - Use well chosen examples:
@@ -49,6 +49,111 @@ pd.options.display.precision = 3
 
 # Short exception tracebacks
 # %xmode Plain
+
+# %% [markdown]
+# ## Pandas data model
+
+# %% [markdown]
+# ### Series and basic indexes
+
+# %% [markdown]
+# The basic pandas data type is a series which is a collection of data points:
+
+# %%
+points = pd.Series([2225, 2183, 2138, 2135, 1959])
+points
+
+# %% [markdown]
+# The right column of the output simply shows the values in the series. `dtype: int64` refers to the data type of the values.
+
+# %% [markdown]
+# The left column of the output shows labels corresponding to the values in the series. The labels are part of the *index* that is a part of every series. By default the series is indexed simply using position of each value in the series:
+
+# %%
+points = pd.Series([2225, 2183, 2138, 2135, 1959])
+points.index
+
+# %% [markdown]
+# `.loc[]` call for a series takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic array indexing (though it does not support negative indexing, since it does label lookup):
+
+# %%
+points = pd.Series([2225, 2183, 2138, 2135, 1959])
+points.loc[2]
+
+# %% [markdown]
+# The index is what makes a series something more than a simple array. It makes it possible to refer to the values in the series by whatever label is appropriate: by a string, by a date, by a pair of numbers, ... It also plays a role similar to a database index, hence the name: it speeds up operations like joins that have to lookup by label repeatedly. The numbers in the series happen to be number of of points scored in the 2022/2023 NBA season by the 5 players who scored the most in this season, so we can usefully index each number in this series with the name of the player. Since we will reuse this example multiple times for brevity we define the series as a global constant:
+
+# %%
+POINTS_TOP5 = pd.Series({
+    "Jayson Tatum": 2225,
+    "Joel Embiid": 2183,
+    "Luka Dončić": 2138,
+    "Shai Gilgeous-Alexander": 2135,
+    "Giannis Antetokounmpo": 1959
+})
+POINTS_TOP5
+
+
+# %% [markdown]
+# For each of the examples to come that use this series we will use the method below to get a new copy, to make sure our examples do not influence with each other:
+
+# %%
+def points_top5():
+    return POINTS_TOP5.copy()
+
+
+# %% [markdown]
+# With the proper index in place, you can now lookup the score for a player using the label:
+
+# %%
+points = points_top5()
+points.loc["Jayson Tatum"]
+
+# %% [markdown]
+# Working with Pandas it is important to be mindful of the dimensionality of the results. The example above returned a scalar, but if you pass the single player name enclosed in an array you will get a series with one entry as a result:
+
+# %%
+points = points_top5()
+points.loc[["Jayson Tatum"]]
+
+# %% [markdown]
+# This variant makes it possible to select multiple players:
+
+# %%
+points = points_top5()
+points.loc[["Jayson Tatum", "Luka Dončić"]]
+
+# %% [markdown]
+# Selection using the position of the data point in the series is always possible with `iloc[]`, regardless of what the index is:
+
+# %%
+points = points_top5()
+points.iloc[[0, 2]]
+
+# %% [markdown]
+# Series support many basic calculations:
+
+# %%
+points = points_top5()
+[
+    points.min(),
+    points.quantile(0.25),
+    points.quantile(0.5),
+    points.mean(),
+    points.quantile(0.75),
+    points.max(),
+    points.sum()
+]
+
+# %% [markdown]
+# You can also add a constant to each element, multiply each element by a constant and so on. For example lets express each score as a fraction of the score of the player who scored the most by dividing the series by the top score:
+
+# %%
+points = points_top5()
+points / points.iloc[0]
+
+# %% [markdown]
+# ### Dataframes
 
 # %% [markdown]
 # ## Cars dataset
