@@ -139,6 +139,13 @@ points = points_top5()
 points.iloc[[0, 2]]
 
 # %% [markdown]
+# `iloc` also works with a slice argument, making it possible to slice series like arrays:
+
+# %%
+points = points_top5()
+points.iloc[1::2]
+
+# %% [markdown]
 # Series support many basic calculations:
 
 # %%
