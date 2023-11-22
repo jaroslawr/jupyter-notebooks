@@ -90,13 +90,31 @@ points_by_player = pd.Series({
 points_by_player
 
 # %% [markdown]
-# With the proper index in place, you can now lookup the score for a player using the label:
+# The index object itself looks like this:
+
+# %%
+points_by_player.index
+
+# %% [markdown]
+# With the index in place, you can now lookup the score for a player using the label:
 
 # %%
 points_by_player.loc["Jayson Tatum"]
 
 # %% [markdown]
-# This kind of lookup by label makes series appear similar to a Python `dict` and in some ways you can use series like one:
+# You can get a series filtered down to a single data point instead of a scalar value by enclosing the label in a list:
+
+# %%
+points_by_player.loc[["Jayson Tatum"]]
+
+# %% [markdown]
+# This form is also one of the ways of selecting a subset of the series:
+
+# %%
+points_by_player.loc[["Jayson Tatum", "Luka Dončić"]]
+
+# %% [markdown]
+# Lookup by label makes series appear similar to a Python `dict` and in some ways you can use series like one:
 
 # %%
 "Jayson Tatum" in points_by_player
@@ -124,6 +142,18 @@ points_by_player.sort_index()
 
 # %%
 points_by_player.sort_values()
+
+# %% [markdown]
+# Regardless of what the index is, selection of series points by position is always possible using `.iloc[]`:
+
+# %%
+points_by_player.iloc[0]
+
+# %%
+points_by_player.iloc[[0]]
+
+# %%
+points_by_player.iloc[0:2]
 
 # %% [markdown]
 # Series have many methods for doing basic calculations:
