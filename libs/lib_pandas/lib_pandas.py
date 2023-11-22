@@ -70,10 +70,15 @@ points_by_pos
 # The right column of the output shows the values in the series.  `dtype: int64` refers to the data type of the values.
 
 # %% [markdown]
-# The left column of the output shows labels corresponding to the values in the series. The labels are part of the *index* that is a part of every series. By default the series is indexed simply using position of each value in the series. `.loc[]` call for a series takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic list indexing (though it does not support negative indexing, since it does label lookup):
+# The left column of the output shows labels corresponding to the values in the series. The labels are part of the *index* that is a part of every series. By default the series is indexed simply using position of each value in the series. The index object in this case looks like this:
 
 # %%
-points_by_pos = pd.Series([2225, 2183, 2138, 2135, 1959])
+points_by_pos.index
+
+# %% [markdown]
+# The  series `.loc[]` method takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic list indexing (though it does not support negative indexing, since it does label lookup):
+
+# %%
 points_by_pos.loc[2]
 
 # %% [markdown]
@@ -90,7 +95,7 @@ points_by_player = pd.Series({
 points_by_player
 
 # %% [markdown]
-# The index object itself looks like this:
+# The index object itself now looks like this:
 
 # %%
 points_by_player.index
@@ -102,16 +107,10 @@ points_by_player.index
 points_by_player.loc["Jayson Tatum"]
 
 # %% [markdown]
-# You can get a series filtered down to a single data point instead of a scalar value by enclosing the label in a list:
+# Regardless of what the index is, selection of data points in the series by position is always possible anyway, using `.iloc[]`:
 
 # %%
-points_by_player.loc[["Jayson Tatum"]]
-
-# %% [markdown]
-# This form is also one of the ways of selecting a subset of the series:
-
-# %%
-points_by_player.loc[["Jayson Tatum", "Luka Dončić"]]
+points_by_player.iloc[0]
 
 # %% [markdown]
 # Lookup by label makes series appear similar to a Python `dict` and in some ways you can use series like one:
@@ -126,10 +125,13 @@ points_by_player.keys()
 list(points_by_player.items())
 
 # %% [markdown]
-# The labels in the index are stored in a particular order that does not need to follow any natural ordering of the labels, making slice selection possible:
+# The labels in the index are stored in a specific order that does not need to follow any natural ordering of the labels. This makes for example selection of a slice possible:
 
 # %%
 points_by_player.loc["Jayson Tatum":"Luka Dončić"]
+
+# %% [markdown]
+# Note that the above examples selects data points with labels between "Jayson Tatum" and "Luka Dončić" according to whatever the label ordering of the series is, not necessarily points whose labels lexicographically fall between the strings "Jayson Tatum" and "Luka Dončić".
 
 # %% [markdown]
 # It follows that there are two ways of sorting a series: you can sort the labels of the index (and values have to be accordingly permuted to follow the ordering of the labels) or you can sort the values (and labels have to be accordingly  permuted to follow the ordering of the values):
@@ -144,19 +146,7 @@ points_by_player.sort_index()
 points_by_player.sort_values()
 
 # %% [markdown]
-# Regardless of what the index is, selection of series points by position is always possible using `.iloc[]`:
-
-# %%
-points_by_player.iloc[0]
-
-# %%
-points_by_player.iloc[[0]]
-
-# %%
-points_by_player.iloc[0:2]
-
-# %% [markdown]
-# Series have many methods for doing basic calculations:
+# Moving on, series have many methods for doing basic calculations:
 
 # %%
 (points_by_player.min(), points_by_player.max())
@@ -168,16 +158,25 @@ points_by_player.mean()
 points_by_player.sum()
 
 # %% [markdown]
-# You can also apply binary operators like `+`, `-`, `*`, `/` to a constant and a series resulting in a series where each element is the result of applying the binary operator to the corresponding element of the input series and the constant. For example, let us express the number of points as a fraction of the points scored by the player who scored the most in this season - we divide the series by a constant (the top score given by `points_by_player.iloc[0]`):
+# You can also add, subtract, multiply, divide, ... a series by a constant or a constant by a series resulting in the given arithmetical operation being applied to each element of the series (and each time with the same constant as the second operand), producing a series of the same length. For example, we can express the number of points as a fraction of the points scored by the player who scored the most in this season - to do so we divide the series by a constant (the top score given by `points_by_player.iloc[0]`):
 
 # %%
 points_by_player / points_by_player.iloc[0]
 
 # %% [markdown]
-# We can also compute the fraction each player scored of the total the top five players scored:
+# We can also compute what is the fraction of the total those five players scored that each players points constitute:
 
 # %%
 points_by_player / points_by_player.sum()
+
+# %% [markdown]
+# Series can also be compared to a constant using standard comparison operators:
+
+# %%
+points_by_player >= 2000
+
+# %% [markdown]
+# Lets look at another series so that we can discuss things like adding two series. Here is how many points the same five players scored one season earlier:
 
 # %% [markdown]
 # ### Dataframes
