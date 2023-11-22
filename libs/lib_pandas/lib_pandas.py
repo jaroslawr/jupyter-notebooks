@@ -54,6 +54,9 @@ pd.options.display.precision = 3
 # ## Pandas data model
 
 # %% [markdown]
+# We begin by exploring the basic Pandas data structures: series, indexes and dataframes. Our goal in this section is to show how things fit together in Pandas conceptually, rather than to be comprehensive about the specific features. We use really simple examples, but jumping right into analysis of real datasets without the foundation we develop here is a recipe for much confusion. 
+
+# %% [markdown]
 # ### Series and basic indexes
 
 # %% [markdown]
@@ -93,10 +96,34 @@ points_by_player
 points_by_player.loc["Jayson Tatum"]
 
 # %% [markdown]
-# Selection using the position of the data point in the series is always possible with `iloc[]`, regardless of what the index is:
+# This kind of lookup by label makes series appear similar to a Python `dict` and in some ways you can use series like one:
 
 # %%
-points_by_player.iloc[0]
+"Jayson Tatum" in points_by_player
+
+# %%
+points_by_player.keys()
+
+# %%
+list(points_by_player.items())
+
+# %% [markdown]
+# The labels in the index are stored in a particular order that does not need to follow any natural ordering of the labels, making slice selection possible:
+
+# %%
+points_by_player.loc["Jayson Tatum":"Luka Dončić"]
+
+# %% [markdown]
+# It follows that there are two ways of sorting a series: you can sort the labels of the index (and values have to be accordingly permuted to follow the ordering of the labels) or you can sort the values (and labels have to be accordingly  permuted to follow the ordering of the values):
+
+# %%
+points_by_player
+
+# %%
+points_by_player.sort_index()
+
+# %%
+points_by_player.sort_values()
 
 # %% [markdown]
 # Series have many methods for doing basic calculations:
@@ -116,10 +143,11 @@ points_by_player.sum()
 # %%
 points_by_player / points_by_player.iloc[0]
 
-# %%
-
 # %% [markdown]
 # We can also compute the fraction each player scored of the total the top five players scored:
+
+# %%
+points_by_player / points_by_player.sum()
 
 # %% [markdown]
 # ### Dataframes
