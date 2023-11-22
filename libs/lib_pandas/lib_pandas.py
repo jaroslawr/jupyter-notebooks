@@ -57,7 +57,7 @@ pd.options.display.precision = 3
 # ### Series and basic indexes
 
 # %% [markdown]
-# The basic pandas data type is a series which is a collection of data points. For our first example, we look at the number of points scored in the 2022/2023 NBA season by the 5 players who scored the most:
+# The basic pandas data type is a series which is a collection of data points. For our first example, we look at the number of points scored in the 2022/2023 NBA season by individual players. The numbers for 5 players who scored the most are as follows:
 
 # %%
 points_by_pos = pd.Series([2225, 2183, 2138, 2135, 1959])
@@ -67,21 +67,14 @@ points_by_pos
 # The right column of the output shows the values in the series.  `dtype: int64` refers to the data type of the values.
 
 # %% [markdown]
-# The left column of the output shows labels corresponding to the values in the series. The labels are part of the *index* that is a part of every series. By default the series is indexed simply using position of each value in the series:
-
-# %%
-points_by_pos = pd.Series([2225, 2183, 2138, 2135, 1959])
-points_by_pos.index
-
-# %% [markdown]
-# `.loc[]` call for a series takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic array indexing (though it does not support negative indexing, since it does label lookup):
+# The left column of the output shows labels corresponding to the values in the series. The labels are part of the *index* that is a part of every series. By default the series is indexed simply using position of each value in the series. `.loc[]` call for a series takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic list indexing (though it does not support negative indexing, since it does label lookup):
 
 # %%
 points_by_pos = pd.Series([2225, 2183, 2138, 2135, 1959])
 points_by_pos.loc[2]
 
 # %% [markdown]
-# The index is what makes a series something more than a simple array. It makes it possible to refer to the values in the series by whatever label is appropriate: by a string, by a date, by a pair of numbers, ... It also plays a role similar to a database index, hence the name: it speeds up operations like joins that have to lookup by label repeatedly.  We can usefully index each number in this series with the name of the player who scored that many points:
+# The index is what makes a series something more than a simple list. It makes it possible to refer to the values in the series by whatever label is appropriate: by a string, by a date, by a pair of numbers, ... It also plays a role similar to a database index, hence the name: it speeds up operations like joins that have to lookup by label repeatedly.  We can usefully index each number in this series with the name of the player who scored that many points:
 
 # %%
 points_by_player = pd.Series({
@@ -100,54 +93,33 @@ points_by_player
 points_by_player.loc["Jayson Tatum"]
 
 # %% [markdown]
-# When using Pandas it is very important to be mindful of the dimensionality of the data structures. The example above returned a scalar, it is also possible to get the data for a single player as a series by passing the name enclosed in an array:
-
-# %%
-points_by_player.loc[["Jayson Tatum"]]
-
-# %% [markdown]
-# Selecting multiple data points is also done by passing in an array of labels and results in a series as it must:
-
-# %%
-points_by_player.loc[["Jayson Tatum", "Luka Dončić"]]
-
-# %% [markdown]
 # Selection using the position of the data point in the series is always possible with `iloc[]`, regardless of what the index is:
 
 # %%
 points_by_player.iloc[0]
 
-# %%
-points_by_player.iloc[[0]]
+# %% [markdown]
+# Series have many methods for doing basic calculations:
 
 # %%
-points_by_player.iloc[[0, 2]]
+(points_by_player.min(), points_by_player.max())
+
+# %%
+points_by_player.mean()
+
+# %%
+points_by_player.sum()
 
 # %% [markdown]
-# `iloc` also works with a slice argument, making it possible to slice series like arrays:
-
-# %%
-points_by_player.iloc[1::2]
-
-# %% [markdown]
-# Series support many basic calculations:
-
-# %%
-[
-    points_by_player.min(),
-    points_by_player.quantile(0.25),
-    points_by_player.quantile(0.5),
-    points_by_player.mean(),
-    points_by_player.quantile(0.75),
-    points_by_player.max(),
-    points_by_player.sum()
-]
-
-# %% [markdown]
-# You can also add a constant to each element, multiply each element by a constant and so on. For example lets express each score as a fraction of the score of the player who scored the most by dividing the series by the top score:
+# You can also apply binary operators like `+`, `-`, `*`, `/` to a constant and a series resulting in a series where each element is the result of applying the binary operator to the corresponding element of the input series and the constant. For example, let us express the number of points as a fraction of the points scored by the player who scored the most in this season - we divide the series by a constant (the top score given by `points_by_player.iloc[0]`):
 
 # %%
 points_by_player / points_by_player.iloc[0]
+
+# %%
+
+# %% [markdown]
+# We can also compute the fraction each player scored of the total the top five players scored:
 
 # %% [markdown]
 # ### Dataframes
@@ -360,7 +332,7 @@ df[df["cyl"].isin([4, 6]) & (df["gear"] == 3)]
 # ### Selecting with iloc[]
 
 # %% [markdown]
-# `iloc[]` returns rows and columns specified using array-like indexes (positive or negative offset of the row in the series or of the rows and optionally columns of the data frame):
+# `iloc[]` returns rows and columns specified using list-like indexes (positive or negative offset of the row in the series or of the rows and optionally columns of the data frame):
 
 # %%
 df = cars()
