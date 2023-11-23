@@ -54,7 +54,7 @@ pd.options.display.precision = 3
 # ## Pandas data model
 
 # %% [markdown]
-# We begin by exploring the basic Pandas data structures: series, indexes and dataframes. Our goal in this section is to show how things fit together in Pandas conceptually, rather than to be comprehensive about the specific features. We use really simple examples, but jumping right into analysis of real datasets without the foundation we develop here is a recipe for much confusion. 
+# We begin by exploring the basic Pandas data structures: series, indexes and dataframes. Our goal in this section is to show how things fit together in Pandas conceptually, rather than to be comprehensive about the specific features. We use many simple examples to build a solid foundation of understanding for analysing real datasets afterwards.
 
 # %% [markdown]
 # ### Series and basic indexes
@@ -76,7 +76,7 @@ points_by_pos
 points_by_pos.index
 
 # %% [markdown]
-# The  series `.loc[]` method takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic list indexing (though it does not support negative indexing, since it does label lookup):
+# The  series `.loc[]` method takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic list indexing (in the simplest case, since it does label lookup it does not support negative indexing):
 
 # %%
 points_by_pos.loc[2]
@@ -113,34 +113,66 @@ points_by_player.loc["Jayson Tatum"]
 points_by_player.iloc[0]
 
 # %% [markdown]
-# Lookup by label makes series appear similar to a Python `dict` and in some ways you can use series like one:
+# In case of both `.loc[]` and `.iloc[]` you can pass in a list as argument which is useful for selecting a subset of the series, including selecting a single data point like above as a single-element series rather than as a scalar:
 
 # %%
-"Jayson Tatum" in points_by_player
+points_by_player.loc[["Jayson Tatum"]]
 
 # %%
-points_by_player.keys()
+points_by_player.loc[["Jayson Tatum", "Joel Embiid"]]
 
 # %%
-list(points_by_player.items())
+points_by_player.iloc[[0]]
+
+# %%
+points_by_player.iloc[[0,1]]
 
 # %% [markdown]
-# The labels in the index are stored in a specific order that does not need to follow any natural ordering of the labels. This makes for example selection of a slice possible:
+# `.iloc[]` also accepts a slice as argument and this will work mostly the same as slicing a Python list:
 
 # %%
-points_by_player.loc["Jayson Tatum":"Luka Dončić"]
+points_by_player.iloc[0:2]
+
+# %%
+points_by_player.iloc[::2]
 
 # %% [markdown]
-# Note that the above examples selects data points with labels between "Jayson Tatum" and "Luka Dončić" according to whatever the label ordering of the series is, not necessarily points whose labels lexicographically fall between the strings "Jayson Tatum" and "Luka Dončić".
+# The labels in the index are stored in a specific order which makes it possible to also use a slice with `.loc[]`, unlike `.iloc[]` the right endpoint of the slice is included in the result:
+
+# %%
+points_by_player.loc["Joel Embiid":"Shai Gilgeous-Alexander"]
 
 # %% [markdown]
-# It follows that there are two ways of sorting a series: you can sort the labels of the index (and values have to be accordingly permuted to follow the ordering of the labels) or you can sort the values (and labels have to be accordingly  permuted to follow the ordering of the values):
+# Note that the above example selects data points with labels between "Joel Embiid" and "Shai Gilgeous-Alexander" according to the arbitrary label ordering of the series, whether or not those are only points with labels lexicographically between "Joel Embiid" and "Shai Gilgeous-Alexander" and whether those are all such points depends on whether the series itself is sorted lexicographically by label or not. In some contexts this can be quite confusing: for example when working with series indexed by date it is very tempting to expect `series.loc[pd.to_datetime("2023-01-01"):pd.to_datetime("2023-12-31")]` to get you only data from 2023 and also all the data from 2023, but this is only guaranteed to be true if the series is sorted by label using calendar-like ordering - when the data was already in the right order in the data source it was imported from, or when it was explictly sorted. You can check if this is the case using attributes of the series index:
+
+# %%
+points_by_player.index.is_monotonic_decreasing # series labels are in the decreasing order according to <= etc.
+
+# %%
+points_by_player.index.is_monotonic_increasing # series labels are in the increasing order according to <= etc.
+
+# %% [markdown]
+# A monotonic index is often desirable in series and dataframes that are the inputs for data analysis since it avoids any potential confusion pointed out above and since it makes some operations more effective. `sort_index()` without arguments will put the series labels in a monotonic increasing order, with `ascending=False` keyword argument in a monotonic decreasing order:
 
 # %%
 points_by_player
 
 # %%
-points_by_player.sort_index()
+points_by_player_sorted = points_by_player.sort_index()
+points_by_player_sorted
+
+# %%
+points_by_player_sorted.index.is_monotonic_increasing
+
+# %%
+points_by_player_sorted = points_by_player.sort_index(ascending=False)
+points_by_player_sorted
+
+# %%
+points_by_player_sorted.index.is_monotonic_decreasing
+
+# %% [markdown]
+# Note that labels and corresponding values are inseparable during sorting - `.sort_index()` compares labels but reorders whole label+value pairs. The second main way to sort a series is to compare the values, again reordering whole label+value pairs. This is accomplished using `.sort_values()`:
 
 # %%
 points_by_player.sort_values()
@@ -177,6 +209,22 @@ points_by_player >= 2000
 
 # %% [markdown]
 # Lets look at another series so that we can discuss things like adding two series. Here is how many points the same five players scored one season earlier:
+
+# %%
+points_by_player_prev_season = pd.Series({
+    "Giannis Antetokounmpo": 2002,
+    "Jayson Tatum": 2046,
+    "Shai Gilgeous-Alexander": 1371,
+    "Luka Dončić": 1847,
+    "Joel Embiid": 2079
+})
+points_by_player_prev_season
+
+# %% [markdown]
+# We can now sum points from both season:
+
+# %%
+points_by_player + points_by_player_prev_season
 
 # %% [markdown]
 # ### Dataframes
