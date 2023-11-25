@@ -101,19 +101,22 @@ points_by_player
 points_by_player.index
 
 # %% [markdown]
-# With the index in place, you can now lookup the score for a player using the label:
+# With the index in place, we can now lookup the score for a player using the label:
 
 # %%
 points_by_player.loc["Jayson Tatum"]
 
 # %% [markdown]
-# Regardless of what the index is, selection of data points in the series by position is always possible anyway, using `.iloc[]`:
+# We can always lookup scores using list-like indices with `.iloc[]`, regardless of what the series index is:
 
 # %%
 points_by_player.iloc[0]
 
 # %% [markdown]
-# In case of both `.loc[]` and `.iloc[]` you can pass in a list as argument which is useful for selecting a subset of the series, including selecting a single data point like above as a single-element series rather than as a scalar:
+# We can pass in a list as a argument when using both `.loc[]` and `.iloc[]` which allows to select a subset of the series, including the selection of a single data point as a single-element series rather than as a scalar:
+
+# %%
+points_by_player
 
 # %%
 points_by_player.loc[["Jayson Tatum"]]
@@ -128,22 +131,16 @@ points_by_player.iloc[[0]]
 points_by_player.iloc[[0,1]]
 
 # %% [markdown]
-# `.iloc[]` also accepts a slice as argument and this will work mostly the same as slicing a Python list:
+# Both `.loc[]` and `.iloc[]` also accept a slice as an argument, in case of `.iloc[]` this works nearly the same as slicing a Python list, in case of `.loc[]` in contrast to Python lists and to `.iloc[]` the right endpoint of the slice is included in the result:
 
 # %%
-points_by_player.iloc[0:2]
-
-# %%
-points_by_player.iloc[::2]
-
-# %% [markdown]
-# The labels in the index are stored in a specific order which makes it possible to also use a slice with `.loc[]`, unlike `.iloc[]` the right endpoint of the slice is included in the result:
+points_by_player.iloc[1:4]
 
 # %%
 points_by_player.loc["Joel Embiid":"Shai Gilgeous-Alexander"]
 
 # %% [markdown]
-# Note that the above example selects data points with labels between "Joel Embiid" and "Shai Gilgeous-Alexander" according to the arbitrary label ordering of the series, whether or not those are only points with labels lexicographically between "Joel Embiid" and "Shai Gilgeous-Alexander" and whether those are all such points depends on whether the series itself is sorted lexicographically by label or not. In some contexts this can be quite confusing: for example when working with series indexed by date it is very tempting to expect `series.loc[pd.to_datetime("2023-01-01"):pd.to_datetime("2023-12-31")]` to get you only data from 2023 and also all the data from 2023, but this is only guaranteed to be true if the series is sorted by label using calendar-like ordering - when the data was already in the right order in the data source it was imported from, or when it was explictly sorted. You can check if this is the case using attributes of the series index:
+# This brings up an important point: data points in the series conceptually have a definite, arbitrary order. Consider a series using dates as labels - it is very tempting to expect `series.loc[pd.to_datetime("2023-01-01"):pd.to_datetime("2023-12-31")]` to get us simultaneously a) only data from 2023 and b) all the data from 2023 present in the series. The sneaky thing is that this is only guaranteed to be true if the series is sorted by label using calendar-like ordering - when the data was already in the right order in the data source it was imported from, or when it was explictly sorted. We can check if this is the case using attributes of the series index:
 
 # %%
 points_by_player.index.is_monotonic_decreasing # series labels are in the decreasing order according to <= etc.
@@ -152,7 +149,7 @@ points_by_player.index.is_monotonic_decreasing # series labels are in the decrea
 points_by_player.index.is_monotonic_increasing # series labels are in the increasing order according to <= etc.
 
 # %% [markdown]
-# A monotonic index is often desirable in series and dataframes that are the inputs for data analysis since it avoids any potential confusion pointed out above and since it makes some operations more effective. `sort_index()` without arguments will put the series labels in a monotonic increasing order, with `ascending=False` keyword argument in a monotonic decreasing order:
+# If the series is not sorted by label and we try to use `.loc[]` with a slice argument, Pandas will first look for an element equal to the left end point of the slice and will include consecutive elements of the series in the result until encountering the element equal to the right endpoint. In this case it is possible for `series.loc[pd.to_datetime("2023-01-01"):pd.to_datetime("2023-12-31")]` to both include data points that are not from 2023 and to not include some series data points that are in fact from 2023. If either a label equal to the left endpoint or a label equal to the right endpoint can not be found in the series Pandas will raise a `KeyError`. To avoid confusion of this kind, it is a good habit to put series and dataframes that are inputs for data analysis in some definite order that is convenient given how the data will be analysed, for example if you intend to slice the series by date, sort it by date. `sort_index()` without arguments will put the series labels in a monotonic increasing order, with `ascending=False` keyword argument in a monotonic decreasing order:
 
 # %%
 points_by_player
@@ -190,7 +187,7 @@ points_by_player.mean()
 points_by_player.sum()
 
 # %% [markdown]
-# You can also add, subtract, multiply, divide, ... a series by a constant or a constant by a series resulting in the given arithmetical operation being applied to each element of the series (and each time with the same constant as the second operand), producing a series of the same length. For example, we can express the number of points as a fraction of the points scored by the player who scored the most in this season - to do so we divide the series by a constant (the top score given by `points_by_player.iloc[0]`):
+# We can also add, subtract, multiply, divide, ... a series by a constant or a constant by a series resulting in the given arithmetical operation being applied to each element of the series (and each time with the same constant as the second operand), producing a series of the same length. For example, we can express the number of points as a fraction of the points scored by the player who scored the most in this season - to do so we divide the series by a constant (the top score given by `points_by_player.iloc[0]`):
 
 # %%
 points_by_player / points_by_player.iloc[0]
@@ -228,6 +225,22 @@ points_by_player + points_by_player_prev_season
 
 # %% [markdown]
 # ### Dataframes
+
+# %% [markdown]
+#
+
+# %%
+points_by_player_by_season = pd.DataFrame({
+    "2021/2022": points_by_player_prev_season,
+    "2022/2023": points_by_player
+})
+points_by_player_by_season
+
+# %%
+points_by_player_by_season.columns
+
+# %%
+points_by_player_by_season.index
 
 # %% [markdown]
 # ## Cars dataset
