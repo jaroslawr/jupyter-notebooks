@@ -101,6 +101,9 @@ points_by_player
 points_by_player.index
 
 # %% [markdown]
+# #### Selecting data
+
+# %% [markdown]
 # With the index in place, we can now lookup the score for a player using the label:
 
 # %%
@@ -140,6 +143,9 @@ points_by_player.iloc[1:4]
 points_by_player.loc["Joel Embiid":"Shai Gilgeous-Alexander"]
 
 # %% [markdown]
+# #### Sorting by label and by value
+
+# %% [markdown]
 # This brings up an important point: data points in the series conceptually have a definite, arbitrary order. Consider a series using dates as labels - it is very tempting to expect `series.loc[pd.to_datetime("2023-01-01"):pd.to_datetime("2023-12-31")]` to get us simultaneously a) only data from 2023 and b) all the data from 2023 present in the series. The sneaky thing is that this is only guaranteed to be true if the series is sorted by label using calendar-like ordering - when the data was already in the right order in the data source it was imported from, or when it was explictly sorted. We can check if this is the case using attributes of the series index:
 
 # %%
@@ -173,6 +179,9 @@ points_by_player_sorted.index.is_monotonic_decreasing
 
 # %%
 points_by_player.sort_values()
+
+# %% [markdown]
+# #### Calculating with series
 
 # %% [markdown]
 # Moving on, series have many methods for doing basic calculations:
@@ -259,6 +268,9 @@ points_by_player_by_season["2022/2023"].index is points_by_player_by_season.inde
 
 # %%
 points_by_player_by_season.columns
+
+# %% [markdown]
+# #### Selecting data
 
 # %% [markdown]
 # ## Cars dataset
