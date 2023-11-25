@@ -76,7 +76,7 @@ points_by_pos
 points_by_pos.index
 
 # %% [markdown]
-# The  series `.loc[]` method takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic list indexing (in the simplest case, since it does label lookup it does not support negative indexing):
+# The  series `loc[]` method takes an index label as argument and looks up the corresponding value in the series. For the default index it ends up working like basic list indexing (in the simplest case, since it does label lookup it does not support negative indexing):
 
 # %%
 points_by_pos.loc[2]
@@ -107,13 +107,13 @@ points_by_player.index
 points_by_player.loc["Jayson Tatum"]
 
 # %% [markdown]
-# We can always lookup scores using list-like indices with `.iloc[]`, regardless of what the series index is:
+# We can always lookup scores using list-like indices with `iloc[]`, regardless of what the series index is:
 
 # %%
 points_by_player.iloc[0]
 
 # %% [markdown]
-# We can pass in a list as a argument when using both `.loc[]` and `.iloc[]` which allows to select a subset of the series, including the selection of a single data point as a single-element series rather than as a scalar:
+# We can pass in a list as a argument when using both `loc[]` and `iloc[]` which allows to select a subset of the series, including the selection of a single data point as a single-element series rather than as a scalar:
 
 # %%
 points_by_player
@@ -131,7 +131,7 @@ points_by_player.iloc[[0]]
 points_by_player.iloc[[0,1]]
 
 # %% [markdown]
-# Both `.loc[]` and `.iloc[]` also accept a slice as an argument, in case of `.iloc[]` this works nearly the same as slicing a Python list, in case of `.loc[]` in contrast to Python lists and to `.iloc[]` the right endpoint of the slice is included in the result:
+# Both `loc[]` and `iloc[]` also accept a slice as an argument, in case of `iloc[]` this works nearly the same as slicing a Python list, in case of `loc[]` in contrast to Python lists and to `iloc[]` the right endpoint of the slice is included in the result:
 
 # %%
 points_by_player.iloc[1:4]
@@ -149,7 +149,7 @@ points_by_player.index.is_monotonic_decreasing # series labels are in the decrea
 points_by_player.index.is_monotonic_increasing # series labels are in the increasing order according to <= etc.
 
 # %% [markdown]
-# If the series is not sorted by label and we try to use `.loc[]` with a slice argument, Pandas will first look for an element equal to the left end point of the slice and will include consecutive elements of the series in the result until encountering the element equal to the right endpoint. In this case it is possible for `series.loc[pd.to_datetime("2023-01-01"):pd.to_datetime("2023-12-31")]` to both include data points that are not from 2023 and to not include some series data points that are in fact from 2023. If either a label equal to the left endpoint or a label equal to the right endpoint can not be found in the series Pandas will raise a `KeyError`. To avoid confusion of this kind, it is a good habit to put series and dataframes that are inputs for data analysis in some definite order that is convenient given how the data will be analysed, for example if you intend to slice the series by date, sort it by date. `sort_index()` without arguments will put the series labels in a monotonic increasing order, with `ascending=False` keyword argument in a monotonic decreasing order:
+# If the series is not sorted by label and we try to use `loc[]` with a slice argument, Pandas will first look for an element equal to the left end point of the slice and will include consecutive elements of the series in the result until encountering the element equal to the right endpoint. In this case it is possible for `series.loc[pd.to_datetime("2023-01-01"):pd.to_datetime("2023-12-31")]` to both include data points that are not from 2023 and to not include some series data points that are in fact from 2023. If either a label equal to the left endpoint or a label equal to the right endpoint can not be found in the series Pandas will raise a `KeyError`. To avoid confusion of this kind, it is a good habit to put series and dataframes that are inputs for data analysis in some definite order that is convenient given how the data will be analysed, for example if you intend to slice the series by date, sort it by date. `sort_index()` without arguments will put the series labels in a monotonic increasing order, with `ascending=False` keyword argument in a monotonic decreasing order:
 
 # %%
 points_by_player
@@ -169,7 +169,7 @@ points_by_player_sorted
 points_by_player_sorted.index.is_monotonic_decreasing
 
 # %% [markdown]
-# Note that labels and corresponding values are inseparable during sorting - `.sort_index()` compares labels but reorders whole label+value pairs. The second main way to sort a series is to compare the values, again reordering whole label+value pairs. This is accomplished using `.sort_values()`:
+# Note that labels and corresponding values are inseparable during sorting. `sort_index()` compares labels but reorders whole label+value pairs. The second main way to sort a series is to compare the values, again reordering whole label+value pairs. This is accomplished using `sort_values()`:
 
 # %%
 points_by_player.sort_values()
@@ -187,7 +187,7 @@ points_by_player.mean()
 points_by_player.sum()
 
 # %% [markdown]
-# We can also add, subtract, multiply, divide, ... a series by a constant or a constant by a series resulting in the given arithmetical operation being applied to each element of the series (and each time with the same constant as the second operand), producing a series of the same length. For example, we can express the number of points as a fraction of the points scored by the player who scored the most in this season - to do so we divide the series by a constant (the top score given by `points_by_player.iloc[0]`):
+# We can add, subtract, multiply, divide, ... a series by a constant or a constant by a series resulting in the given arithmetical operation being applied to each element of the series (and each time with the same constant as the second operand), producing a series of the same length. For example, we can express the number of points as a fraction of the points scored by the player who scored the most in this season - to do so we divide the series by a constant (the top score given by `points_by_player.iloc[0]`):
 
 # %%
 points_by_player / points_by_player.iloc[0]
@@ -199,7 +199,7 @@ points_by_player / points_by_player.iloc[0]
 points_by_player / points_by_player.sum()
 
 # %% [markdown]
-# Series can also be compared to a constant using standard comparison operators:
+# Series can be compared to a constant using standard comparison operators:
 
 # %%
 points_by_player >= 2000
@@ -227,7 +227,7 @@ points_by_player + points_by_player_prev_season
 # ### Dataframes
 
 # %% [markdown]
-#
+# Conceptually a dataframe is a two dimensional table of values with labels attached to both rows and columns, like a series of column series. All the column series share the same row index, or to put it differently all the columns share the same row labels. Another index, the column index, assigns labels to the columns themselves. The dataframe API generalizes the series API, with the additional complexity introduced by the second dimension and the fact that different column series can hold different types of values. This is not intended to describe how a dataframe is implemented, the point is that if you understand the series API and look at enough examples of using dataframes in the context of this description you can get a general feel how to use Pandas effectively without memorizing too many details, which is our main goal. Lets start by putting the example series from the previous section in a dataframe:
 
 # %%
 points_by_player_by_season = pd.DataFrame({
@@ -236,11 +236,29 @@ points_by_player_by_season = pd.DataFrame({
 })
 points_by_player_by_season
 
+# %% [markdown]
+# You can access the column series with `[]` in simple cases, though `loc[]` is preferred for anything except a simple peak at a column, as we will discuss in a moment:
+
 # %%
-points_by_player_by_season.columns
+points_by_player_by_season["2021/2022"]
+
+# %% [markdown]
+# `index` attribute in case of a dataframe is the row index and is shared across all the columns:
 
 # %%
 points_by_player_by_season.index
+
+# %%
+points_by_player_by_season["2021/2022"].index is points_by_player_by_season.index
+
+# %%
+points_by_player_by_season["2022/2023"].index is points_by_player_by_season.index
+
+# %% [markdown]
+# The index labelling the columns looks like this:
+
+# %%
+points_by_player_by_season.columns
 
 # %% [markdown]
 # ## Cars dataset
