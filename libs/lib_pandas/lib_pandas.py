@@ -131,7 +131,7 @@ points_by_player.loc[["Jayson Tatum", "Joel Embiid"]]
 points_by_player.iloc[[0]]
 
 # %%
-points_by_player.iloc[[0,1]]
+points_by_player.iloc[[0, 1]]
 
 # %% [markdown]
 # Both `loc[]` and `iloc[]` also accept a slice as an argument, in case of `iloc[]` this works nearly the same as slicing a Python list, with the right endpoint not included in the result:
@@ -144,6 +144,19 @@ points_by_player.iloc[1:4]
 
 # %%
 points_by_player.loc["Joel Embiid":"Shai Gilgeous-Alexander"]
+
+# %% [markdown]
+# Finally, you can also select elements using `[]`:
+
+# %%
+points_by_player["Joel Embiid"]
+
+# %% [markdown]
+# However `[]` can be quite confusing - whether it looks up elements by label or by position depends on the data type of the argument and on the data type of the labels:
+#   - `[]` with a single integer argument selects element by label, when series labels are integers, otherwise it selects by position, though the last behaviour is now deprecated and will get removed
+#   - `[]` with a slice with integer endpoints selects by position regardless of the datatype of the label
+#
+# There are also additional caveats when using `[]` with dataframes that we cover later, this is why we suggest to explictly select by label with `loc[]` or by position with `iloc[]`, except for some very basic uses (selection of column from dataframe).
 
 # %% [markdown]
 # #### Sorting by label and by value
@@ -239,7 +252,7 @@ points_by_player + points_by_player_prev_season
 # ### Dataframes
 
 # %% [markdown]
-# Conceptually a dataframe is a two dimensional table of values with labels attached to both rows and columns, like a series of column series. All the column series share the same row index, or to put it differently all the columns share the same row labels. Another index, the column index, assigns labels to the columns themselves. The dataframe API generalizes the series API, with the additional complexity introduced by the second dimension and the fact that different columns can hold different types of values. This is not intended to describe how a dataframe is implemented, the point is that if you understand the series API and look at enough examples of using dataframes in the context of this description you can get a general feel how to use Pandas effectively without memorizing too many details, which is our main goal. Lets start by putting the example series from the previous section in a dataframe:
+# Conceptually a dataframe is a two dimensional table of values with labels attached to both rows and columns, like a series of column series. All the column series share the same row index, or to put it differently all the columns share the same row labels. Another index, the column index, assigns labels to the columns themselves. The dataframe API generalizes the series API, with the additional complexity introduced by the second dimension and the fact that different columns can hold different types of values. Lets see how this looks like - we start by putting the example series from the previous section in a dataframe:
 
 # %%
 points_by_player_by_season = pd.DataFrame({
