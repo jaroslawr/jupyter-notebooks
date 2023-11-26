@@ -134,10 +134,13 @@ points_by_player.iloc[[0]]
 points_by_player.iloc[[0,1]]
 
 # %% [markdown]
-# Both `loc[]` and `iloc[]` also accept a slice as an argument, in case of `iloc[]` this works nearly the same as slicing a Python list, in case of `loc[]` in contrast to Python lists and to `iloc[]` the right endpoint of the slice is included in the result:
+# Both `loc[]` and `iloc[]` also accept a slice as an argument, in case of `iloc[]` this works nearly the same as slicing a Python list, with the right endpoint not included in the result:
 
 # %%
 points_by_player.iloc[1:4]
+
+# %% [markdown]
+# In case of `loc[]` in contrast to Python lists and to `iloc[]` the right endpoint of the slice is included in the result:
 
 # %%
 points_by_player.loc["Joel Embiid":"Shai Gilgeous-Alexander"]
@@ -146,7 +149,7 @@ points_by_player.loc["Joel Embiid":"Shai Gilgeous-Alexander"]
 # #### Sorting by label and by value
 
 # %% [markdown]
-# This brings up an important point: data points in the series conceptually have a definite, arbitrary order. Consider a series using dates as labels - it is very tempting to expect `series.loc[pd.to_datetime("2023-01-01"):pd.to_datetime("2023-12-31")]` to get us simultaneously a) only data from 2023 and b) all the data from 2023 present in the series. The sneaky thing is that this is only guaranteed to be true if the series is sorted by label using calendar-like ordering - when the data was already in the right order in the data source it was imported from, or when it was explictly sorted. We can check if this is the case using attributes of the series index:
+# The ability to select data in a series by label using a slice brings up an important point: data points in the series conceptually have a definite order that is arbitrary, it is up to the user to sort the series in a way that is convenient for the task at hand. Consider a series using dates as labels - it is very tempting to expect `series.loc[pd.to_datetime("2023-01-01"):pd.to_datetime("2023-12-31")]` to get us simultaneously a) only data from 2023 and b) all the data from 2023 present in the series. The sneaky thing is that this is only guaranteed to be true if the series is sorted by label using calendar-like ordering - when the data was already in the right order in the data source it was imported from, or when it was explictly sorted. We can check if this is the case using attributes of the series index:
 
 # %%
 points_by_player.index.is_monotonic_decreasing # series labels are in the decreasing order according to <= etc.
@@ -175,7 +178,7 @@ points_by_player_sorted
 points_by_player_sorted.index.is_monotonic_decreasing
 
 # %% [markdown]
-# Note that labels and corresponding values are inseparable during sorting. `sort_index()` compares labels but reorders whole label+value pairs. The second main way to sort a series is to compare the values, again reordering whole label+value pairs. This is accomplished using `sort_values()`:
+# Note that labels and corresponding values are inseparable during sorting. `sort_index()` compares labels but reorders whole pairs composed of label and value. `sort_values()`, the second main way to sort a series, compares values and reorders pairs of label and value:
 
 # %%
 points_by_player.sort_values()
@@ -236,7 +239,7 @@ points_by_player + points_by_player_prev_season
 # ### Dataframes
 
 # %% [markdown]
-# Conceptually a dataframe is a two dimensional table of values with labels attached to both rows and columns, like a series of column series. All the column series share the same row index, or to put it differently all the columns share the same row labels. Another index, the column index, assigns labels to the columns themselves. The dataframe API generalizes the series API, with the additional complexity introduced by the second dimension and the fact that different column series can hold different types of values. This is not intended to describe how a dataframe is implemented, the point is that if you understand the series API and look at enough examples of using dataframes in the context of this description you can get a general feel how to use Pandas effectively without memorizing too many details, which is our main goal. Lets start by putting the example series from the previous section in a dataframe:
+# Conceptually a dataframe is a two dimensional table of values with labels attached to both rows and columns, like a series of column series. All the column series share the same row index, or to put it differently all the columns share the same row labels. Another index, the column index, assigns labels to the columns themselves. The dataframe API generalizes the series API, with the additional complexity introduced by the second dimension and the fact that different columns can hold different types of values. This is not intended to describe how a dataframe is implemented, the point is that if you understand the series API and look at enough examples of using dataframes in the context of this description you can get a general feel how to use Pandas effectively without memorizing too many details, which is our main goal. Lets start by putting the example series from the previous section in a dataframe:
 
 # %%
 points_by_player_by_season = pd.DataFrame({
