@@ -36,7 +36,7 @@ import pycountry
 from datetime import datetime, timedelta
 
 # %%
-plt.style.use("ggplot")
+plt.style.use("dark_background")
 
 # %%
 pd.options.display.max_rows = 999

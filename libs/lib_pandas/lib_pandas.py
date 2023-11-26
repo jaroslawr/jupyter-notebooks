@@ -252,7 +252,7 @@ points_by_player + points_by_player_prev_season
 # ### Dataframes
 
 # %% [markdown]
-# Conceptually a dataframe is a two dimensional table of values with labels attached to both rows and columns, like a series of column series. All the column series share the same row index, or to put it differently all the columns share the same row labels. Another index, the column index, assigns labels to the columns themselves. The dataframe API generalizes the series API, with the additional complexity introduced by the second dimension and the fact that different columns can hold different types of values. Lets see how this looks like - we start by putting the example series from the previous section in a dataframe:
+# For the purposes of understanding the Pandas API and not its implementation, a dataframe is a two dimensional table of values with labels attached to both rows and columns, like a series of column series. All the column series share the same row index, or to put it differently all the columns share the same row labels. Another index, the column index, assigns labels to the columns themselves. The dataframe API generalizes the series API, with the additional complexity introduced by the second dimension and the fact that different columns can hold different types of values. Lets see how this looks like - we start by putting the example series from the previous section in a dataframe:
 
 # %%
 points_by_player_by_season = pd.DataFrame({
@@ -262,13 +262,13 @@ points_by_player_by_season = pd.DataFrame({
 points_by_player_by_season
 
 # %% [markdown]
-# You can access the column series with `[]` in simple cases, though `loc[]` is preferred for anything except a simple peak at a column, as we will discuss in a moment:
+# You can access the column series with `[]` in simple cases, though as with series `loc[]` is often preferred:
 
 # %%
 points_by_player_by_season["2021/2022"]
 
 # %% [markdown]
-# `index` attribute in case of a dataframe is the row index and is shared across all the columns:
+# `index` attribute in case of a dataframe holds the row index and is shared across all the column series:
 
 # %%
 points_by_player_by_season.index
